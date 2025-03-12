@@ -1,0 +1,1 @@
+Package focused on author-related functionality

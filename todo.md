@@ -27,3 +27,34 @@ sku: novels-name-{no}
 ## id, name, sku
 
 1, bumi manusia, novels-foo-1
+
+DB
+
+- author
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `city` varchar(255) DEFAULT NULL,
+
+- book
+  `id` int NOT NULL AUTO_INCREMENT,
+  `author_id` int NOT NULL,
+  `type_id` int DEFAULT NULL,
+  `name` varchar(38) NOT NULL,
+  `price` decimal(8,2) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_authorBook` (`author_id`),
+  CONSTRAINT `FK_authorBook` FOREIGN KEY (`author_id`) REFERENCES `author` (`id`)
+
+- type
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+
+https://github.com/swaggo/swag
+$ go install github.com/swaggo/swag/cmd/swag@latest
+$ swag init
+$ go get -u github.com/swaggo/http-swagger
+
+https://reqbin.com/

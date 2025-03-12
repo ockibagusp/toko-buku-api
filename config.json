@@ -1,0 +1,29 @@
+{
+    "app": {
+        "name": "toko-buku-api",
+        "prefork": false
+    },
+    "server": {
+        "host": "localhost",
+        "port": 3000,
+        "readTimeout": 10,
+        "writeTimeout": 30,
+        "idleTimeout": 20
+    },
+    "log": {
+        "level": 6
+    },
+    "database": {
+        "username": "root",
+        "password": "rahasia!",
+        "host": "localhost",
+        "port": 3306,
+        "name": "toko-buku-api",
+        "pool": {
+            "max": 25,
+            "idle": 25,
+            "lifetime": 5,
+            "idletime": 5
+        }
+    }
+}

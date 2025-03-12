@@ -1,5 +1,5 @@
 # main
-main := main.go
+main := cmd/main.go
 
 sql-start:
 	brew services start mysql
