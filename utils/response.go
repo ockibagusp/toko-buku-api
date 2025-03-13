@@ -11,7 +11,7 @@ type BaseResponseModel[T any] struct {
 // BaseResponseDataModel helpers
 type BaseResponseDataModel[T any] struct {
 	BaseResponseModel[T]
-	Data T `json:"error,omitempty"`
+	Data T `json:"data,omitempty"`
 }
 
 // BaseResponseErrorModel helpers
