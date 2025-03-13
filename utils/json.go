@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func RespondWithJSON(writer http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(writer http.ResponseWriter, code int, payload any) {
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Failed to marshal JSON respone: %v", err)
@@ -20,7 +20,7 @@ func RespondWithJSON(writer http.ResponseWriter, code int, payload interface{}) 
 }
 
 // 400
-func RespondErrorWithJSON(writer http.ResponseWriter, code int, messageErr interface{}) {
+func RespondErrorWithJSON(writer http.ResponseWriter, code int, messageErr any) {
 	if code >= http.StatusInternalServerError {
 		// HTTP status: 500
 		log.Printf("Responding with 5xx error: %v", messageErr)
