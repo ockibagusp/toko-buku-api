@@ -1,17 +1,27 @@
 # main
 main := cmd/main.go
 
-sql-start:
+start/sql:
 	brew services start mysql
 
-sql-stop:
+stop/sql:
 	brew services stop mysql
 
-sql-info:
+info/sql:
 	brew services info mysql
 
+run-sql:
+	@echo "------"
+	@@brew services start mysql
+	@echo "------"
+# 1. golang run next or, (.. || ...)
+# 2. mysql stop
+	@@go run $(main) || brew services stop mysql
+
 run:
-	go run $(main)
+	@go run $(main)
 
 build:
-	go build $(main)
+	@go build $(main)
+
+all: run-sql
