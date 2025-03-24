@@ -14,9 +14,12 @@ run-sql:
 	@echo "------"
 	@@brew services start mysql
 	@echo "------"
-# 1. golang run next or, (.. || ...)
-# 2. mysql stop
-	@@go run $(main) || brew services stop mysql
+# 1. golang run next (or), (.. || ...)
+# 2. print "------"
+# 2. stop mysql
+	@@go run $(main) \
+		|| echo "------" \
+		&& brew services stop mysql
 
 run:
 	@go run $(main)
