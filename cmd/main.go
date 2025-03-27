@@ -77,6 +77,7 @@ func main() {
 		log.Error(ctx, "startup", "err", fmt.Sprintf("server error: %v", err))
 
 	case signalChan := <-shutdown:
+		fmt.Println("\n------")
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", signalChan)
 		defer func() {
 			log.Error(ctx, "shutdown", "status", "shutdown complete", "signal", signalChan)
