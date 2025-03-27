@@ -88,7 +88,7 @@ func main() {
 
 		if err := server.Shutdown(ctx); err != nil {
 			server.Close()
-			log.Error(ctx, "startup", "err", fmt.Sprintf("could not stop server gracefully: %v", err))
+			log.Fatal(ctx, "startup", "err", fmt.Sprintf("could not stop server gracefully: %v", err))
 		}
 	}
 }
