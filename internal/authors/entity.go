@@ -11,7 +11,7 @@ type Author struct {
 	ID         uint16
 	Updated_At time.Time // `gorm:"updated_at"`
 	Country_Id uint8
-	Country    *countries.Country
+	Country    *countries.Country `json:",omitempty"`
 	Author     string
 	City       string
 }
