@@ -67,15 +67,14 @@ func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Author, erro
 	return &authors, nil
 }
 
-func scanIntoGetAuthors(rows *sql.Rows) (author Author, err error) {
+func scanIntoGetAuthors(rows *sql.Rows) (selectedAuthor Author, err error) {
 	var country countries.Country
-
 	err = rows.Scan(
-		&author.ID,
-		&author.Updated_At,
-		&author.Country_Id,
-		&author.Author,
-		&author.City,
+		&selectedAuthor.ID,
+		&selectedAuthor.Updated_At,
+		&selectedAuthor.Country_Id,
+		&selectedAuthor.Author,
+		&selectedAuthor.City,
 		&country.ID,
 		&country.Updated_At,
 		&country.Iso3,
@@ -87,12 +86,12 @@ func scanIntoGetAuthors(rows *sql.Rows) (author Author, err error) {
 	// TODO
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return author, fmt.Errorf(authorNotFoundError, author.ID)
+			return selectedAuthor, fmt.Errorf(authorNotFoundError, selectedAuthor.ID)
 		}
-		return author, fmt.Errorf(authorBaseError, author.ID, err)
+		return selectedAuthor, fmt.Errorf(authorBaseError, selectedAuthor.ID, err)
 	}
 
-	author.Country = &country
+	selectedAuthor.Country = &country
 	return
 }
 
@@ -142,8 +141,8 @@ func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Author, error) {
 ///////
 
 func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Author) (auther *Author, err error) {
-	query := "INSERT into author(author, city) VALUES (?)"
-	result, err := tx.ExecContext(ctx, query, author.Author, author.City)
+	query := "INSERT into author(country_id, author, city) VALUES (?, ?, ?)"
+	result, err := tx.ExecContext(ctx, query, author.Country_Id, author.Author, author.City)
 	if err != nil {
 		return nil, err
 	}

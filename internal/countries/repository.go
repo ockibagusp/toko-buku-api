@@ -32,6 +32,7 @@ func NewRepository(db *sql.DB, logger *logger.Logger) Repository {
 // FindCompletePersonByID(..)
 
 func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Country, error) {
+	var countries []Country
 	query := `SELECT id, updated_at, iso3, country, nice_country, currency FROM country`
 
 	rows, err := tx.QueryContext(ctx, query)
@@ -42,9 +43,13 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Country, er
 	}
 	defer rows.Close()
 
-	var countries []Country
 	for rows.Next() {
-		countries, err = scanRowIntoGetCountries(rows)
+		country, err := scanIntoGetCountries(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		countries = append(countries, country)
 	}
 
 	rerr := rows.Close()
@@ -62,8 +67,7 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Country, er
 	return countries, nil
 }
 
-func scanRowIntoGetCountries(rows *sql.Rows) (countries []Country, err error) {
-	var country Country
+func scanIntoGetCountries(rows *sql.Rows) (country Country, err error) {
 	err = rows.Scan(
 		&country.ID,
 		&country.Updated_At,
@@ -75,12 +79,11 @@ func scanRowIntoGetCountries(rows *sql.Rows) (countries []Country, err error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf(countryNotFoundError, country.ID)
+			return country, fmt.Errorf(countryNotFoundError, country.ID)
 		}
-		return nil, fmt.Errorf(countryBaseError, country.ID, err)
+		return country, fmt.Errorf(countryBaseError, country.ID, err)
 	}
 
-	countries = append(countries, country)
 	return
 }
 

@@ -34,11 +34,17 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 	// 	}),
 	// })
 	cfg := mysql.Config{
-		User:                 username,
-		Passwd:               password,
-		Addr:                 fmt.Sprintf("%s:%d", host, port),
-		DBName:               database,
-		Loc:                  time.UTC,
+		User:   username,
+		Passwd: password,
+		Addr:   fmt.Sprintf("%s:%d", host, port),
+		DBName: database,
+		Loc: func() *time.Location {
+			loc, err := time.LoadLocation("Asia/Jakarta")
+			if err != nil {
+				log.Fatal(context.Background(), "failed to load location: %v", err)
+			}
+			return loc
+		}(),
 		AllowNativePasswords: true,
 		ParseTime:            true,
 	}
@@ -60,11 +66,3 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 
 	return db
 }
-
-// type logrusWriter struct {
-// 	Logger *logrus.Logger
-// }
-
-// func (l *logrusWriter) Printf(message string, args ...interface{}) {
-// 	l.Logger.Tracef(message, args...)
-// }
