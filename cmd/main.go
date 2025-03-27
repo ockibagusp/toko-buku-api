@@ -10,8 +10,6 @@ import (
 	"syscall"
 	"time"
 	"toko-buku-api/config"
-	"toko-buku-api/internal/authors"
-	"toko-buku-api/internal/countries"
 	"toko-buku-api/pkg/logger"
 
 	"github.com/go-playground/validator/v10"
@@ -95,28 +93,5 @@ func main() {
 }
 
 func test(db *sql.DB) {
-	// var author authors.Author
-	author1 := authors.Author{
-		ID:         1,
-		Updated_At: time.Now(),
-		Country_Id: 1,
-		Author:     "Author 1",
-		City:       "City 1",
-	}
 
-	fmt.Printf("%+v\n", author1)
-
-	author2 := authors.Author{
-		ID:         2,
-		Updated_At: time.Now(),
-		Country_Id: 2,
-		Country: &countries.Country{
-			ID:   1,
-			Iso3: "IDN",
-		},
-		Author: "Author 1",
-		City:   "City 1",
-	}
-
-	fmt.Printf("%+v\n", author2)
 }
