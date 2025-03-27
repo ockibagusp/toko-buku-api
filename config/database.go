@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	goLog "log"
 	"time"
 	"toko-buku-api/pkg/logger"
 
@@ -22,7 +23,7 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 	maxLifeTimeConnection := viper.GetInt("database.pool.lifetime")
 	maxIdleTimeConnection := viper.GetInt("database.pool.idletime")
 
-	// dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Asia%2FTokyo", username, password, host, port, database)
+	// dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True", username, password, host, port, database)
 
 	// db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 	// 	Logger: logger.New(&logrusWriter{Logger: log}, logger.Config{
@@ -46,11 +47,13 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Error(context.Background(), "failed to connect database: %v", err)
+		goLog.Fatalf("failed to connect database: %v", err)
 	}
 
 	pingErr := db.Ping()
 	if pingErr != nil {
 		log.Error(context.Background(), "failed to ping is still alive: %v", pingErr)
+		goLog.Fatalf("failed to ping is still alive: %v", pingErr)
 	}
 
 	db.SetMaxOpenConns(maxConnection)
