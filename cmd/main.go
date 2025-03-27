@@ -44,12 +44,17 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
+	host := viper.GetString("server.host")
+	readTimeout := viper.GetInt("server.readTimeout")
+	writeTimeout := viper.GetInt("server.writeTimeout")
+	idleTimeout := viper.GetInt("server.idleTimeout")
+
 	server := http.Server{
-		Addr:         fmt.Sprintf("%s:%s", viper.GetString("server.host"), viper.GetString("server.port")),
+		Addr:         fmt.Sprintf("%s:%s", host, viper.GetString("server.port")),
 		Handler:      routing,
-		ReadTimeout:  time.Duration(viper.GetInt("server.readTimeout")) * time.Second,
-		WriteTimeout: time.Duration(viper.GetInt("server.writeTimeout")) * time.Second,
-		IdleTimeout:  time.Duration(viper.GetInt("server.idleTimeout")) * time.Second,
+		ReadTimeout:  time.Duration(readTimeout) * time.Second,
+		WriteTimeout: time.Duration(writeTimeout) * time.Second,
+		IdleTimeout:  time.Duration(idleTimeout) * time.Second,
 		ErrorLog:     logger.NewStdLogger(log, logger.LevelError),
 	}
 
@@ -73,7 +78,10 @@ func main() {
 
 	case signalChan := <-shutdown:
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", signalChan)
-		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", signalChan)
+		defer func() {
+			log.Error(ctx, "shutdown", "status", "shutdown complete", "signal", signalChan)
+			os.Exit(0)
+		}()
 
 		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
@@ -86,29 +94,28 @@ func main() {
 }
 
 func test(db *sql.DB) {
-	var author authors.Author
-	row := db.QueryRow("SELECT a.id, a.updated_at, a.author, a.city, c.id, c.updated_at, c.iso3, c.country, c.nice_country, c.currency FROM author a LEFT JOIN country c ON a.country_id = c.id WHERE a.id = ?", 1)
-
-	var country countries.Country
-	if err := row.Scan(
-		&author.ID,
-		&author.Updated_At,
-		&author.Author,
-		&author.City,
-		&country.ID,
-		&country.Updated_At,
-		&country.Iso3,
-		&country.Country,
-		&country.Nice_Country,
-		&country.Currency,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Errorf("albumsById %d: no such album", 1)
-		}
-		fmt.Errorf("albumsById %d: %v", 1, err)
+	// var author authors.Author
+	author1 := authors.Author{
+		ID:         1,
+		Updated_At: time.Now(),
+		Country_Id: 1,
+		Author:     "Author 1",
+		City:       "City 1",
 	}
 
-	author.Country = &country
+	fmt.Printf("%+v\n", author1)
 
-	fmt.Println(author, country)
+	author2 := authors.Author{
+		ID:         2,
+		Updated_At: time.Now(),
+		Country_Id: 2,
+		Country: &countries.Country{
+			ID:   1,
+			Iso3: "IDN",
+		},
+		Author: "Author 1",
+		City:   "City 1",
+	}
+
+	fmt.Printf("%+v\n", author2)
 }

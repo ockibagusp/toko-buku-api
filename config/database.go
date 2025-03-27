@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	goLog "log"
 	"time"
 	"toko-buku-api/pkg/logger"
 
@@ -46,14 +45,12 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
-		log.Error(context.Background(), "failed to connect database: %v", err)
-		goLog.Fatalf("failed to connect database: %v", err)
+		log.Fatal(context.Background(), "failed to connect database: %v", err)
 	}
 
 	pingErr := db.Ping()
 	if pingErr != nil {
-		log.Error(context.Background(), "failed to ping is still alive: %v", pingErr)
-		goLog.Fatalf("failed to ping is still alive: %v", pingErr)
+		log.Fatal(context.Background(), "failed to ping is still alive: %v", pingErr)
 	}
 
 	db.SetMaxOpenConns(maxConnection)
