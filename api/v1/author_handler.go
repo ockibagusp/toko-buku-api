@@ -20,6 +20,14 @@ type AuthorHandler struct {
 }
 
 func NewAuthorHandler(usercase authors.Usecase, validate *validator.Validate) *AuthorHandler {
+	// file, err := os.OpenFile("./tmp/app-info.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	// if err != nil {
+	//     log.Fatal(err)
+	// }
+	// log.SetOutput(file)
+	// log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+
+	// var log = logger.NewWithFiles(os.Stdout, logger.LevelDebug, "AUTHOR", nil)
 	log := logger.New(os.Stdout, logger.LevelDebug, "AUTHOR", nil)
 
 	return &AuthorHandler{
@@ -30,11 +38,11 @@ func NewAuthorHandler(usercase authors.Usecase, validate *validator.Validate) *A
 
 func (h AuthorHandler) GetAuthors(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	h.Log.Debug(ctx, "handler.getauthors", "receive get all authors request")
+	h.Log.Debug(ctx, "handler.GetAuthors", "receive get all authors request")
 
 	authors, err := h.Usecase.GetAuthors(ctx)
 	if err != nil {
-		h.Log.Debug(ctx, "handler.getauthors", "receive get authors with error request", err)
+		h.Log.Debug(ctx, "handler.GetAuthors", "receive get authors with error request", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
@@ -73,14 +81,15 @@ func (h AuthorHandler) GetAuthorById(writer http.ResponseWriter, request *http.R
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
+// ///
 func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	h.Log.Debug(ctx, "handler.createauthor", "receive create author request")
+	h.Log.Debug(ctx, "handler.CreateAuthor", "receive create author request")
 
 	createRequestAuthor := new(authors.CreateAuthorRequest)
 	err := json.NewDecoder(request.Body).Decode(&createRequestAuthor)
 	if err != nil {
-		h.Log.Debug(ctx, "handler.createauthor", "failed to parse create author with error request", err)
+		h.Log.Debug(ctx, "handler.CreateAuthor", "failed to parse create author with error request", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
@@ -89,24 +98,25 @@ func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Re
 
 	createAuthor, err := h.Usecase.CreateAuthor(ctx, createRequestAuthor)
 	if err != nil {
-		h.Log.Warn(ctx, "handler.createauthor", "invalid to parse create author with error request", err)
+		h.Log.Warn(ctx, "handler.CreateAuthor", "invalid to parse create author with error request", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
+
 	response := utils.StatusOK(createAuthor)
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
 func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	h.Log.Debug(ctx, "handler.updateauthor", "receive update author request")
+	h.Log.Debug(ctx, "handler.UpdateAuthor", "receive update author request")
 
 	authorById := request.URL.Query().Get("authorById")
 	id, err := strconv.Atoi(authorById)
 	if err != nil {
-		h.Log.Warn(ctx, "handler.updateauthor", "receive get author by id: %+v with error", authorById)
+		h.Log.Warn(ctx, "handler.UpdateAuthor", "receive get author by id: %+v with error", authorById)
 
 		responseErr := utils.StatusInternalServerError(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
@@ -116,7 +126,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	updateRequestAuthor := new(authors.UpdateAuthorRequest)
 	err = json.NewDecoder(request.Body).Decode(&updateRequestAuthor)
 	if err != nil {
-		h.Log.Debug(ctx, "handler.updateauthor", "failed to parse create author with error request", err)
+		h.Log.Debug(ctx, "handler.UpdateAuthor", "failed to parse create author with error request", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
@@ -126,7 +136,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 
 	authorResponse, err := h.Usecase.UpdateAuthor(ctx, updateRequestAuthor)
 	if err != nil {
-		h.Log.Warn(ctx, "handler.createauthor", "invalid to parse create author with error request", err)
+		h.Log.Warn(ctx, "handler.UpdateAuthor", "invalid to parse create author with error request", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
@@ -138,12 +148,12 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 
 func (h AuthorHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	h.Log.Debug(ctx, "handler.deleteauthor", "receive delete author request")
+	h.Log.Debug(ctx, "handler.DeleteAuthor", "receive delete author request")
 
 	authorById := request.URL.Query().Get("authorById")
 	id, err := strconv.Atoi(authorById)
 	if err != nil {
-		h.Log.Warn(ctx, "handler.deleteauthor", "receive get author by id: %+v with error", authorById)
+		h.Log.Warn(ctx, "handler.DeleteAuthor", "receive get author by id: %+v with error", authorById)
 
 		responseErr := utils.StatusInternalServerError(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
@@ -152,7 +162,7 @@ func (h AuthorHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Re
 
 	err = h.Usecase.DeleteAuthor(ctx, uint16(id))
 	if err != nil {
-		h.Log.Warn(ctx, "handler.deleteauthor", "failed to parse request body", err)
+		h.Log.Warn(ctx, "handler.DeleteAuthor", "failed to parse request body", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)

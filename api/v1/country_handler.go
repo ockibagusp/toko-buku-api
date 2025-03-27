@@ -30,18 +30,18 @@ func NewCountryHandler(usercase countries.Usecase, validate *validator.Validate)
 
 func (h CountryHandler) GetCountries(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	h.Log.Debug(ctx, "handler.getcountrys", "receive get all countrys request")
+	h.Log.Debug(ctx, "handler.GetCountries", "receive get all countries request")
 
-	countrys, err := h.Usecase.GetCountries(ctx)
+	countries, err := h.Usecase.GetCountries(ctx)
 	if err != nil {
-		h.Log.Debug(ctx, "handler.getcountrys", "receive get countrys with error request", err)
+		h.Log.Debug(ctx, "handler.GetCountries", "receive get countries with error request", err)
 
 		responseErr := utils.StatusBadRequest(err.Error())
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
 
-	response := utils.StatusOK(countrys)
+	response := utils.StatusOK(countries)
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
