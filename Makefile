@@ -10,7 +10,10 @@ stop/sql:
 info/sql:
 	brew services info mysql
 
-run-sql: start/sql
+run:
+	@go run $(main)
+
+all: start/sql
 	@@sleep 1
 	@echo "------"
 # 1. golang run next (or), (.. || ...)
@@ -20,10 +23,5 @@ run-sql: start/sql
 		|| echo "------" \
 		&& brew services stop mysql
 
-run:
-	@go run $(main)
-
 build:
 	@go build $(main)
-
-all: run-sql
