@@ -2,7 +2,6 @@ package authors
 
 import (
 	"context"
-	"fmt"
 	"toko-buku-api/pkg/logger"
 	"toko-buku-api/utils"
 
@@ -38,8 +37,6 @@ func (u *Usecase) GetAuthors(ctx context.Context) (*[]Author, error) {
 		u.Log.Warn(ctx, "usecase.GetAuthors", "not found", err)
 		return nil, err
 	}
-
-	fmt.Println(authors)
 
 	return authors, nil
 }
