@@ -59,13 +59,6 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 		log.Fatal(context.Background(), "failed to ping is still alive: %v", pingErr)
 	}
 
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			log.Fatal(context.Background(), "got error when closing the DB connection", err)
-		}
-	}()
-
 	db.SetMaxOpenConns(maxConnection)
 	db.SetMaxIdleConns(idleConnection)
 	db.SetConnMaxLifetime(time.Second * time.Duration(maxLifeTimeConnection))
