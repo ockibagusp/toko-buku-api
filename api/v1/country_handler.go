@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"strconv"
 	"toko-buku-api/internal/countries"
 	"toko-buku-api/pkg/logger"
@@ -19,12 +18,10 @@ type CountryHandler struct {
 	Log     *logger.Logger
 }
 
-func NewCountryHandler(usercase countries.Usecase, validate *validator.Validate) *CountryHandler {
-	log := logger.New(os.Stdout, logger.LevelDebug, "COUNTRY", nil)
-
+func NewCountryHandler(usercase countries.Usecase, logger *logger.Logger, validate *validator.Validate) *CountryHandler {
 	return &CountryHandler{
 		Usecase: usercase,
-		Log:     log,
+		Log:     logger,
 	}
 }
 

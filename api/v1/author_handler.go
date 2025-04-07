@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"strconv"
 	"toko-buku-api/internal/authors"
 	"toko-buku-api/pkg/logger"
@@ -19,7 +18,7 @@ type AuthorHandler struct {
 	Log     *logger.Logger
 }
 
-func NewAuthorHandler(usercase authors.Usecase, validate *validator.Validate) *AuthorHandler {
+func NewAuthorHandler(usercase authors.Usecase, logger *logger.Logger, validate *validator.Validate) *AuthorHandler {
 	// file, err := os.OpenFile("./tmp/app-info.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	// if err != nil {
 	//     log.Fatal(err)
@@ -28,11 +27,10 @@ func NewAuthorHandler(usercase authors.Usecase, validate *validator.Validate) *A
 	// log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 
 	// var log = logger.NewWithFiles(os.Stdout, logger.LevelDebug, "AUTHOR", nil)
-	log := logger.New(os.Stdout, logger.LevelDebug, "AUTHOR", nil)
 
 	return &AuthorHandler{
 		Usecase: usercase,
-		Log:     log,
+		Log:     logger,
 	}
 }
 

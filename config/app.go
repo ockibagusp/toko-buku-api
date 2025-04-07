@@ -22,7 +22,7 @@ type AppConfig struct {
 }
 
 func NewApp(appConfig *AppConfig) *http.ServeMux {
-	// typeRepository := types.NewRepository(appConfig.DB, appConfig.Log)
+	// typeRepository := types.NewRepository(appDB, appLog)
 	// typeService := service.NewTypeService(typeRepository, db, validate)
 	// typeController := controller.NewTypeController(typeService)
 
@@ -33,9 +33,11 @@ func NewApp(appConfig *AppConfig) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// handle author-related endpoints
-	authorRepository := authors.NewRepository(appConfig.DB, appConfig.Log)
-	authorUsecase := authors.NewUsecase(authorRepository, appConfig.Log, appConfig.Validate)
-	authorHandler := v1.NewAuthorHandler(authorUsecase, appConfig.Validate)
+	authorLog := logger.NewService("AUTHOR")
+
+	authorRepository := authors.NewRepository(appConfig.DB, authorLog)
+	authorUsecase := authors.NewUsecase(authorRepository, authorLog, appConfig.Validate)
+	authorHandler := v1.NewAuthorHandler(authorUsecase, authorLog, appConfig.Validate)
 	mux.HandleFunc("GET /authors", authorHandler.GetAuthors)
 	mux.HandleFunc("GET /authors/{authorById}", authorHandler.GetAuthorById)
 	mux.HandleFunc("POST /authors", authorHandler.CreateAuthor)
@@ -43,9 +45,11 @@ func NewApp(appConfig *AppConfig) *http.ServeMux {
 	mux.HandleFunc("DELETE /authors/{authorById}", authorHandler.DeleteAuthor)
 
 	// handle country-related endpoints
-	countryRepository := countries.NewRepository(appConfig.DB, appConfig.Log)
-	countryUsecase := countries.NewUsecase(countryRepository, appConfig.Log, appConfig.Validate)
-	countryHandler := v1.NewCountryHandler(countryUsecase, appConfig.Validate)
+	countryLog := logger.NewService("COUNTRY")
+
+	countryRepository := countries.NewRepository(appConfig.DB, countryLog)
+	countryUsecase := countries.NewUsecase(countryRepository, countryLog, appConfig.Validate)
+	countryHandler := v1.NewCountryHandler(countryUsecase, countryLog, appConfig.Validate)
 	mux.HandleFunc("GET /countries", countryHandler.GetCountries)
 	mux.HandleFunc("GET /countries/{countryById}", countryHandler.GetCountryById)
 	mux.HandleFunc("POST /countries", countryHandler.CreateCountry)
