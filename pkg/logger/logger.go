@@ -26,6 +26,12 @@ type Logger struct {
 	traceIDFn TraceIDFn
 }
 
+// NewServiceName constructs a new log for application use with the
+// specified service name.
+func NewService(serviceName string) *Logger {
+	return new(os.Stdout, LevelDebug, serviceName, nil, Events{})
+}
+
 // New constructs a new log for application use.
 func New(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn) *Logger {
 	return new(w, minLevel, serviceName, traceIDFn, Events{})
