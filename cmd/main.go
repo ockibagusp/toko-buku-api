@@ -78,8 +78,17 @@ func main() {
 		fmt.Println("\n------")
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", signalChan)
 		defer func() {
-			log.Error(ctx, "shutdown", "status", "shutdown complete", "signal", signalChan)
+			log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", signalChan)
 			os.Exit(0)
+		}()
+
+		log.Info(ctx, "shutdown", "status", "database close started", "status", "waiting...")
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				log.Fatal(context.Background(), "got error when closing the DB connection", err)
+			}
+			log.Info(ctx, "shutdown", "status", "database close complete", "status", "ok")
 		}()
 
 		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
