@@ -25,16 +25,18 @@ func NewUsecase(repo Repository, logger *logger.Logger, validate *validator.Vali
 }
 
 func (u *Usecase) GetAuthors(ctx context.Context) (*[]Author, error) {
+	funcName := "usecase.GetAuthors"
+
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetAuthors", "failed request body to get authors", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get authors: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
 
 	authors, err := u.Repo.GetAuthors(ctx, tx)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetAuthors", "not found", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get authors: not found", err)
 		return nil, err
 	}
 
@@ -42,16 +44,18 @@ func (u *Usecase) GetAuthors(ctx context.Context) (*[]Author, error) {
 }
 
 func (u *Usecase) GetAuthorById(ctx context.Context, authorId uint16) (*Author, error) {
+	funcName := "usecase.GetAuthorById"
+
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetAuthorById", "failed request body to get author by id", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get author by id: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
 
 	author, err := u.Repo.GetAuthorById(ctx, tx, authorId)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetAuthorById", "not found by id", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get author by id: not found by id", err)
 		return nil, err
 	}
 
@@ -59,15 +63,17 @@ func (u *Usecase) GetAuthorById(ctx context.Context, authorId uint16) (*Author, 
 }
 
 func (u *Usecase) CreateAuthor(ctx context.Context, request *CreateAuthorRequest) (*Author, error) {
+	funcName := "usecase.CreateAuthor"
+
 	err := u.Validate.Struct(request)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.CreateAuthor", "invalid request body to create author", err)
+		u.Log.Warn(ctx, &funcName, "invalid request body to create author", err)
 		return nil, err
 	}
 
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.CreateAuthor", "failed request body to create author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to create author: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
@@ -80,7 +86,7 @@ func (u *Usecase) CreateAuthor(ctx context.Context, request *CreateAuthorRequest
 
 	createdAuthor, err = u.Repo.CreateAuthor(ctx, tx, createdAuthor)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.CreateAuthor", "invalid request body to create author", err)
+		u.Log.Warn(ctx, &funcName, "invalid request body to create author", err)
 		return nil, err
 	}
 
@@ -88,21 +94,23 @@ func (u *Usecase) CreateAuthor(ctx context.Context, request *CreateAuthorRequest
 }
 
 func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest) (*Author, error) {
+	funcName := "usecase.UpdateAuthor"
+
 	err := u.Validate.Struct(request)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.UpdateAuthor", "invalid request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "invalid request body to update author", err)
 	}
 
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.UpdateAuthor", "failed request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to update: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
 
 	updateAuthor, err := u.Repo.GetAuthorById(ctx, tx, uint16(request.ID))
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.UpdateAuthor", "failed request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to update author: repo GetAuthorById", err)
 		return nil, err
 	}
 
@@ -111,6 +119,7 @@ func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest
 	// ??
 	updateAuthor, err = u.Repo.UpdateAuthor(ctx, tx, updateAuthor)
 	if err != nil {
+		u.Log.Warn(ctx, &funcName, "failed request body to update author", err)
 		return nil, err
 	}
 
@@ -118,15 +127,18 @@ func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest
 }
 
 func (u *Usecase) DeleteAuthor(ctx context.Context, authorId uint16) error {
+	funcName := "usecase.DeleteAuthor"
+
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
+		u.Log.Warn(ctx, &funcName, "failed request body to delete: repo db begin", err)
 		return err
 	}
 	defer utils.CommitOrRollback(tx)
 
 	author, err := u.Repo.GetAuthorById(ctx, tx, authorId)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.DeleteAuthor", "failed request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to delete author", err)
 		return err
 	}
 

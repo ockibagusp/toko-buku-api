@@ -23,49 +23,55 @@ func NewUsecase(repo Repository, logger *logger.Logger, validate *validator.Vali
 }
 
 func (u *Usecase) GetCountries(ctx context.Context) ([]Country, error) {
+	funcName := "usecase.GetCountries"
+
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetCountries", "failed request body to get authors", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get countries: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
 
-	authors, err := u.Repo.GetCountries(ctx, tx)
+	countrys, err := u.Repo.GetCountries(ctx, tx)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetCountries", "not found", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get countries: not found", err)
 		return nil, err
 	}
 
-	return authors, nil
+	return countrys, nil
 }
 
-func (u *Usecase) GetCountryByID(ctx context.Context, authorID uint16) (*Country, error) {
+func (u *Usecase) GetCountryByID(ctx context.Context, countryID uint16) (*Country, error) {
+	funcName := "usecase.GetCountryByID"
+
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetCountryByID", "failed request body to get author by id", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get country by id", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
 
-	author, err := u.Repo.GetCountryByID(ctx, tx, authorID)
+	country, err := u.Repo.GetCountryByID(ctx, tx, countryID)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.GetCountryByID", "not found by id", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to get country by id: not found by id", err)
 		return nil, err
 	}
 
-	return author, nil
+	return country, nil
 }
 
 func (u *Usecase) CreateCountry(ctx context.Context, request *CreateCountryRequest) (*Country, error) {
+	funcName := "usecase.CreateCountry"
+
 	err := u.Validate.Struct(request)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.CreateCountry", "invalid request body to create author", err)
+		u.Log.Warn(ctx, &funcName, "invalid request body to create country", err)
 		return nil, err
 	}
 
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.CreateCountry", "failed request body to create author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to create country: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
@@ -79,7 +85,7 @@ func (u *Usecase) CreateCountry(ctx context.Context, request *CreateCountryReque
 
 	createdCountry, err = u.Repo.CreateCountry(ctx, tx, createdCountry)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.CreateCountry", "invalid request body to create author", err)
+		u.Log.Warn(ctx, &funcName, "invalid request body to create country", err)
 		return nil, err
 	}
 
@@ -87,46 +93,52 @@ func (u *Usecase) CreateCountry(ctx context.Context, request *CreateCountryReque
 }
 
 func (u *Usecase) UpdateCountry(ctx context.Context, request *UpdateCountryRequest) (*Country, error) {
+	funcName := "usecase.UpdateCountry"
+
 	err := u.Validate.Struct(request)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.UpdateCountry", "invalid request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "invalid request body to update country", err)
 	}
 
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.UpdateCountry", "failed request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to update country: repo db begin", err)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
 
-	updateCountry, err := u.Repo.GetCountryByID(ctx, tx, uint16(request.ID))
+	updatedCountry, err := u.Repo.GetCountryByID(ctx, tx, uint16(request.ID))
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.UpdateCountry", "failed request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to update country", err)
 		return nil, err
 	}
 
-	updateCountry.Country = request.Country
+	updatedCountry.Country = request.Country
 
-	updateCountry, err = u.Repo.UpdateCountry(ctx, tx, updateCountry)
+	updatedCountry, err = u.Repo.UpdateCountry(ctx, tx, updatedCountry)
 	if err != nil {
+		u.Log.Warn(ctx, &funcName, "failed request body to update country: repo UpdateCountry", err)
 		return nil, err
 	}
 
-	return updateCountry, nil
+	return updatedCountry, nil
 }
 
-func (u *Usecase) DeleteCountry(ctx context.Context, authorID uint16) error {
+func (u *Usecase) DeleteCountry(ctx context.Context, countryID uint16) error {
+	funcName := "usecase.DeleteCountry"
+
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
+		u.Log.Warn(ctx, &funcName, "failed request body to delete country: repo db begin", err)
 		return err
 	}
 	defer utils.CommitOrRollback(tx)
 
-	author, err := u.Repo.GetCountryByID(ctx, tx, authorID)
+	country, err := u.Repo.GetCountryByID(ctx, tx, countryID)
 	if err != nil {
-		u.Log.Warn(ctx, "usecase.DeleteCountry", "failed request body to update author", err)
+		u.Log.Warn(ctx, &funcName, "failed request body to delete country", err)
 		return err
 	}
 
-	return u.Repo.DeleteCountry(ctx, tx, author)
+	return u.Repo.DeleteCountry(ctx, tx, country)
 }

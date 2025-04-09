@@ -3,6 +3,7 @@ package logger
 // https://github.com/ardanlabs/usdl/tree/main/chat/foundation/logger
 // Package logger provides support for initializing the log system.
 
+// {"time":"2025-04-07T09:08:35.429826+07:00","level":"DEBUG","file":"author_handler.go:39","msg":"receive get all authors request","service":"AUTHOR","func_name":"handler.GetAuthors"}
 import (
 	"context"
 	"fmt"
@@ -26,15 +27,15 @@ type Logger struct {
 	traceIDFn TraceIDFn
 }
 
+// New constructs a new log for application use.
+func New(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn) *Logger {
+	return new(w, minLevel, serviceName, traceIDFn, Events{})
+}
+
 // NewServiceName constructs a new log for application use with the
 // specified service name.
 func NewService(serviceName string) *Logger {
 	return new(os.Stdout, LevelDebug, serviceName, nil, Events{})
-}
-
-// New constructs a new log for application use.
-func New(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn) *Logger {
-	return new(w, minLevel, serviceName, traceIDFn, Events{})
 }
 
 // NewWithFiles constructs a new log for application use with files.
@@ -59,56 +60,56 @@ func NewStdLogger(logger *Logger, level Level) *log.Logger {
 }
 
 // Debug logs at LevelDebug with the given context.
-func (log *Logger) Debug(ctx context.Context, msg string, args ...any) {
-	log.write(ctx, LevelDebug, 3, msg, args...)
+func (log *Logger) Debug(ctx context.Context, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelDebug, 3, funcName, msg, args...)
 }
 
 // Debugc logs the information at the specified call stack position.
-func (log *Logger) Debugc(ctx context.Context, caller int, msg string, args ...any) {
-	log.write(ctx, LevelDebug, caller, msg, args...)
+func (log *Logger) Debugc(ctx context.Context, caller int, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelDebug, caller, funcName, msg, args...)
 }
 
 // Info logs at LevelInfo with the given context.
-func (log *Logger) Info(ctx context.Context, msg string, args ...any) {
-	log.write(ctx, LevelInfo, 3, msg, args...)
+func (log *Logger) Info(ctx context.Context, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelInfo, 3, funcName, msg, args...)
 }
 
 // Infoc logs the information at the specified call stack position.
-func (log *Logger) Infoc(ctx context.Context, caller int, msg string, args ...any) {
-	log.write(ctx, LevelInfo, caller, msg, args...)
+func (log *Logger) Infoc(ctx context.Context, caller int, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelInfo, caller, funcName, msg, args...)
 }
 
 // Warn logs at LevelWarn with the given context.
-func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
-	log.write(ctx, LevelWarn, 3, msg, args...)
+func (log *Logger) Warn(ctx context.Context, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelWarn, 3, funcName, msg, args...)
 }
 
 // Warnc logs the information at the specified call stack position.
-func (log *Logger) Warnc(ctx context.Context, caller int, msg string, args ...any) {
-	log.write(ctx, LevelWarn, caller, msg, args...)
+func (log *Logger) Warnc(ctx context.Context, caller int, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelWarn, caller, funcName, msg, args...)
 }
 
 // Error logs at LevelError with the given context.
-func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
-	log.write(ctx, LevelError, 3, msg, args...)
+func (log *Logger) Error(ctx context.Context, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelError, 3, funcName, msg, args...)
 }
 
 // Errorc logs the information at the specified call stack position.
-func (log *Logger) Errorc(ctx context.Context, caller int, msg string, args ...any) {
-	log.write(ctx, LevelError, caller, msg, args...)
+func (log *Logger) Errorc(ctx context.Context, caller int, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelError, caller, funcName, msg, args...)
 }
 
-func (log *Logger) Fatal(ctx context.Context, msg string, args ...any) {
-	log.write(ctx, LevelError, 3, msg, args...)
+func (log *Logger) Fatal(ctx context.Context, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelError, 3, funcName, msg, args...)
 	os.Exit(1)
 }
 
-func (log *Logger) Fatalc(ctx context.Context, caller int, msg string, args ...any) {
-	log.write(ctx, LevelError, caller, msg, args...)
+func (log *Logger) Fatalc(ctx context.Context, caller int, funcName *string, msg string, args ...any) {
+	log.write(ctx, LevelError, caller, funcName, msg, args...)
 	os.Exit(1)
 }
 
-func (log *Logger) write(ctx context.Context, level Level, caller int, msg string, args ...any) {
+func (log *Logger) write(ctx context.Context, level Level, caller int, funcName *string, msg string, args ...any) {
 	slogLevel := slog.Level(level)
 
 	if !log.handler.Enabled(ctx, slogLevel) {
@@ -119,6 +120,9 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 	runtime.Callers(caller, pcs[:])
 
 	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
+	if funcName != nil {
+		args = append(args, "func_name", funcName)
+	}
 
 	if log.traceIDFn != nil {
 		args = append(args, "trace_id", log.traceIDFn(ctx))

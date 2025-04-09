@@ -32,13 +32,13 @@ func NewRepository(db *sql.DB, logger *logger.Logger) Repository {
 // FindCompletePersonByID(..)
 
 func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Country, error) {
+	var funcName = "repository.GetCountries"
 	var countries []Country
 	query := `SELECT id, updated_at, iso3, country, nice_country, currency FROM country`
 
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
-		r.Log.Debug(ctx, "repository.GetCountries", "get query context with error", err)
-
+		r.Log.Debug(ctx, &funcName, "get query context with error", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -46,6 +46,7 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Country, er
 	for rows.Next() {
 		country, err := scanIntoGetCountries(rows)
 		if err != nil {
+			r.Log.Debug(ctx, &funcName, "get scan into get countries with error", err)
 			return nil, err
 		}
 
@@ -54,13 +55,13 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Country, er
 
 	rerr := rows.Close()
 	if rerr != nil {
-		r.Log.Debug(ctx, "repository.GetCountries", "get query context close with error", err)
+		r.Log.Debug(ctx, &funcName, "get rows close with error", err)
 
 		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
-		r.Log.Debug(ctx, "repository.GetCountries", "get query context .Err() with error", err)
+		r.Log.Debug(ctx, &funcName, "get rows err with error", err)
 		return nil, err
 	}
 
@@ -88,16 +89,18 @@ func scanIntoGetCountries(rows *sql.Rows) (country Country, err error) {
 }
 
 func (r Repository) GetCountryByID(ctx context.Context, tx *sql.Tx, countryID uint16) (country *Country, err error) {
+	funcName := "repository.GetCountryByID"
 	query := `SELECT id, updated_at, iso3, country, nice_country, currency FROM country WHERE id = ?`
 
 	row := tx.QueryRowContext(ctx, query, countryID)
 
 	country, err = scanRowIntoGetCountryByID(row)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			r.Log.Debug(ctx, &funcName, "get scan row into get coutry by id with errors.Is", err)
 			return nil, fmt.Errorf(countryNotFoundError, country.ID)
 		}
+		r.Log.Debug(ctx, &funcName, "get scan row into get coutry by id with error", err)
 		return nil, fmt.Errorf(countryBaseError, country.ID, err)
 	}
 
@@ -127,14 +130,18 @@ func scanRowIntoGetCountryByID(row *sql.Row) (*Country, error) {
 }
 
 func (r Repository) CreateCountry(ctx context.Context, tx *sql.Tx, country *Country) (auther *Country, err error) {
+	funcName := "repository.CreateCountry"
+
 	query := "INSERT into country(id, updated_at, iso3, country, nice_country, currency) VALUES (?)"
 	result, err := tx.ExecContext(ctx, query, country.ID, country.Updated_At, country.Iso3, country.Country, country.Nice_Country, country.Currency)
 	if err != nil {
+		r.Log.Debug(ctx, &funcName, "get exec context with create country error", err)
 		return nil, err
 	}
 
 	countryID, err := result.LastInsertId()
 	if err != nil {
+		r.Log.Debug(ctx, &funcName, "get result last insert id with create country error:", err)
 		return nil, err
 	}
 	country.ID = uint8(countryID)
@@ -142,10 +149,13 @@ func (r Repository) CreateCountry(ctx context.Context, tx *sql.Tx, country *Coun
 }
 
 func (r Repository) UpdateCountry(ctx context.Context, tx *sql.Tx, country *Country) (*Country, error) {
+	funcName := "repository.UpdateCountry"
+
 	// TODO: Why?
 	query := "UPDATE country set iso3 = ?, country = ?, nice_country = ?, currency = ? WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, country.Iso3, country.Country, country.Currency, country.ID)
 	if err != nil {
+		r.Log.Debug(ctx, &funcName, "get exec context with update country error", err)
 		return nil, err
 	}
 
@@ -153,9 +163,12 @@ func (r Repository) UpdateCountry(ctx context.Context, tx *sql.Tx, country *Coun
 }
 
 func (r Repository) DeleteCountry(ctx context.Context, tx *sql.Tx, country *Country) error {
+	funcName := "repository.DeleteCountry"
+
 	query := "DELETE FROM country WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, country.ID)
 	if err != nil {
+		r.Log.Debug(ctx, &funcName, "get exec context with delete country error", err)
 		return err
 	}
 
