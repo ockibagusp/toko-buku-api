@@ -37,7 +37,7 @@ func main() {
 	// Start API Service
 	ctx := context.Background()
 
-	log.Info(ctx, nil, "startup", "status", "initializing V1 API support")
+	log.Info(ctx, "startup", "status", "initializing V1 API support")
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
@@ -58,7 +58,7 @@ func main() {
 
 	serverErrs := make(chan error, 1)
 	go func() {
-		log.Info(ctx, nil, "startup", "status", "api router started", "host", server.Addr)
+		log.Info(ctx, "startup", "status", "api router started", "host", server.Addr)
 
 		serverErrs <- server.ListenAndServe()
 	}()
@@ -72,23 +72,23 @@ func main() {
 
 	select {
 	case err := <-serverErrs:
-		log.Error(ctx, nil, "startup", "err", fmt.Sprintf("server error: %v", err))
+		log.Error(ctx, "startup", "err", fmt.Sprintf("server error: %v", err))
 
 	case signalChan := <-shutdown:
 		fmt.Println("\n------")
-		log.Info(ctx, nil, "shutdown", "status", "shutdown started", "signal", signalChan)
+		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", signalChan)
 		defer func() {
-			log.Info(ctx, nil, "shutdown", "status", "shutdown complete", "signal", signalChan)
+			log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", signalChan)
 			os.Exit(0)
 		}()
 
-		log.Info(ctx, nil, "shutdown", "status", "database close started", "status", "waiting...")
+		log.Info(ctx, "shutdown", "status", "database close started", "status", "waiting...")
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				log.Fatal(context.Background(), nil, "got error when closing the DB connection", err)
+				log.Fatal(context.Background(), "got error when closing the DB connection", err)
 			}
-			log.Info(ctx, nil, "shutdown", "status", "database close complete", "status", "ok")
+			log.Info(ctx, "shutdown", "status", "database close complete", "status", "ok")
 		}()
 
 		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
@@ -96,7 +96,7 @@ func main() {
 
 		if err := server.Shutdown(ctx); err != nil {
 			server.Close()
-			log.Fatal(ctx, nil, "startup", "err", fmt.Sprintf("could not stop server gracefully: %v", err))
+			log.Fatal(ctx, "startup", "err", fmt.Sprintf("could not stop server gracefully: %v", err))
 		}
 	}
 }

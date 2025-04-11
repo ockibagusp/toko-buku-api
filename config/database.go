@@ -41,7 +41,7 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 		Loc: func() *time.Location {
 			loc, err := time.LoadLocation("Asia/Jakarta")
 			if err != nil {
-				log.Fatal(context.Background(), nil, "failed to load location: %v", err)
+				log.Fatal(context.Background(), "failed to load location: %v", err)
 			}
 			return loc
 		}(),
@@ -51,12 +51,12 @@ func NewDatabase(viper *viper.Viper, log *logger.Logger) *sql.DB {
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
-		log.Fatal(context.Background(), nil, "failed to connect database: %v", err)
+		log.Fatal(context.Background(), "failed to connect database: %v", err)
 	}
 
 	pingErr := db.Ping()
 	if pingErr != nil {
-		log.Fatal(context.Background(), nil, "failed to ping is still alive: %v", pingErr)
+		log.Fatal(context.Background(), "failed to ping is still alive: %v", pingErr)
 	}
 
 	db.SetMaxOpenConns(maxConnection)
