@@ -7,14 +7,18 @@ import (
 
 // Data models and structs specific to author functionality
 
-type Author struct {
+type Authors struct {
 	ID         uint16
 	Updated_At time.Time // `gorm:"updated_at"`
 	Country_Id uint8
-	Country    *countries.Country `json:",omitempty"`
+	Country    *countries.Countries `json:",omitempty"`
 	Author     string
 	City       string
 }
+
+// func (a Author) TableName() string {
+// 	return "authors"
+// }
 
 type CreateAuthorRequest struct {
 	Country_Id uint8  `validate:"required" json:"country_id"`

@@ -2,7 +2,7 @@ package countries
 
 import "time"
 
-type Country struct {
+type Countries struct {
 	ID           uint8
 	Updated_At   time.Time
 	Iso3         string

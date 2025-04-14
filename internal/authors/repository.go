@@ -32,14 +32,14 @@ func NewRepository(db *sql.DB, logger *logger.Logger) Repository {
 // FindAllComplete(..)
 // FindCompletePersonByID(..)
 
-func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Author, error) {
-	var authors []Author
+func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, error) {
+	var authors []Authors
 	var funcName = "repository.GetAuthors"
-	query := `SELECT a.*, c.* FROM author a LEFT JOIN country c ON a.country_id = c.id`
+	query := `SELECT a.*, c.* FROM authors a LEFT JOIN countries c ON a.country_id = c.id`
 
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
-		r.Log.Debug(ctx, &funcName, "get query context with error", err)
+		r.Log.Debug(ctx, "func_name", funcName, "get query context with error", err)
 
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Author, erro
 	for rows.Next() {
 		author, err := scanIntoGetAuthors(rows)
 		if err != nil {
-			r.Log.Debug(ctx, &funcName, "get scan into get authors with error", err)
+			r.Log.Debug(ctx, "func_name", funcName, "get scan into get author with error", err)
 			return nil, err
 		}
 
@@ -56,20 +56,20 @@ func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Author, erro
 	}
 
 	if err := rows.Close(); err != nil {
-		r.Log.Debug(ctx, &funcName, "get rows close with error", err)
+		r.Log.Debug(ctx, "func_name", funcName, "get rows close with error", err)
 		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
-		r.Log.Debug(ctx, &funcName, "get rows err with error", err)
+		r.Log.Debug(ctx, "func_name", funcName, "get rows err with error", err)
 		return nil, err
 	}
 
 	return &authors, nil
 }
 
-func scanIntoGetAuthors(rows *sql.Rows) (selectedAuthor Author, err error) {
-	var country countries.Country
+func scanIntoGetAuthors(rows *sql.Rows) (selectedAuthor Authors, err error) {
+	var country countries.Countries
 	err = rows.Scan(
 		&selectedAuthor.ID,
 		&selectedAuthor.Updated_At,
@@ -96,28 +96,28 @@ func scanIntoGetAuthors(rows *sql.Rows) (selectedAuthor Author, err error) {
 	return
 }
 
-func (r Repository) GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint16) (*Author, error) {
+func (r Repository) GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint16) (*Authors, error) {
 	funcName := "repository.GetAuthorById"
-	query := `SELECT a.*, c.* FROM author a LEFT JOIN country c ON a.country_id = c.id WHERE a.id = ?`
+	query := `SELECT a.*, c.* FROM authors a LEFT JOIN countries c ON a.country_id = c.id WHERE a.id = ?`
 
 	row := tx.QueryRowContext(ctx, query, authorId)
 
 	author, err := scanRowIntoGetAuthorById(row, authorId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			r.Log.Debug(ctx, &funcName, "get scan row into get author by id with errors.Is", err)
+			r.Log.Debug(ctx, "func_name", funcName, "get scan row into get author by id with errors.Is", err)
 			return nil, fmt.Errorf(authorNotFoundError, author.ID)
 		}
-		r.Log.Debug(ctx, &funcName, "get scan row into get author by id with error", err)
+		r.Log.Debug(ctx, "func_name", funcName, "get scan row into get author by id with error", err)
 		return nil, fmt.Errorf(authorBaseError, author.ID, err)
 	}
 
 	return author, nil
 }
 
-func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Author, error) {
-	var author = Author{}
-	var country = countries.Country{}
+func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Authors, error) {
+	var author = Authors{}
+	var country = countries.Countries{}
 
 	if err := row.Scan(
 		&author.ID,
@@ -133,9 +133,9 @@ func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Author, error) {
 		&country.Currency,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("albumsById %d: no such album", authorId)
+			return nil, fmt.Errorf(authorNotFoundError, authorId)
 		}
-		return nil, fmt.Errorf("albumsById %d: %v", authorId, err)
+		return nil, fmt.Errorf(authorBaseError, authorId, err)
 	}
 
 	author.Country = &country
@@ -144,45 +144,41 @@ func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Author, error) {
 
 ///////
 
-func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Author) (auther *Author, err error) {
+func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (auther *Authors, err error) {
 	funcName := "repository.CreateAuthor"
 
-	query := "INSERT into author(country_id, author, city) VALUES (?, ?, ?)"
+	query := "INSERT INTO authors(country_id, authors, city) VALUES (?, ?, ?)"
 	result, err := tx.ExecContext(ctx, query, author.Country_Id, author.Author, author.City)
 	if err != nil {
-		r.Log.Debug(ctx, &funcName, "get exec context with create author error", err)
+		r.Log.Debug(ctx, "func_name", funcName, "get exec context with create author error", err)
 		return nil, err
 	}
 
 	authorId, err := result.LastInsertId()
 	if err != nil {
-		r.Log.Debug(ctx, &funcName, "get result last insert id with create author error", err)
+		r.Log.Debug(ctx, "func_name", funcName, "get result last insert id with create author error", err)
 		return nil, err
 	}
 	author.ID = uint16(authorId)
 	return author, nil
 }
 
-func (r Repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Author) (*Author, error) {
-	funcName := "repository.UpdateAuthor"
-
-	query := "UPDATE author set author = ?, city = ? WHERE author_id = ?"
+func (r Repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (*Authors, error) {
+	query := "UPDATE authors SET author = ?, city = ? WHERE author_id = ?"
 	_, err := tx.ExecContext(ctx, query, author.Author, author.City, author.ID)
 	if err != nil {
-		r.Log.Debug(ctx, &funcName, "get exec context with update author error", err)
+		r.Log.Debug(ctx, "func_name", "repository.UpdateAuthor", "get exec context with update author error", err)
 		return nil, err
 	}
 
 	return author, nil
 }
 
-func (r Repository) DeleteAuthor(ctx context.Context, tx *sql.Tx, author *Author) error {
-	funcName := "repository.DeleteAuthor"
-
-	query := "DELETE FROM author WHERE id = ?"
+func (r Repository) DeleteAuthor(ctx context.Context, tx *sql.Tx, author *Authors) error {
+	query := "DELETE FROM authors WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, author.ID)
 	if err != nil {
-		r.Log.Debug(ctx, &funcName, "get exec context with delete author error", err)
+		r.Log.Debug(ctx, "func_name", "repository.DeleteAuthor", "get exec context with delete author error", err)
 		return err
 	}
 
