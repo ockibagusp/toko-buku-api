@@ -71,7 +71,7 @@ func (u *Usecase) CreateCountry(ctx context.Context, request *CreateCountryReque
 
 	tx, err := u.Repo.DB.Begin()
 	if err != nil {
-		u.Log.Warn(ctx, "failed request body to create country: repo db begin", "error", err, "func_name", funcName)
+		u.Log.Warn(ctx, "failed request body to create country: repo db begin", "error", err, "func_name", funcName)
 		return nil, err
 	}
 	defer utils.CommitOrRollback(tx)
@@ -85,7 +85,7 @@ func (u *Usecase) CreateCountry(ctx context.Context, request *CreateCountryReque
 
 	createdCountry, err = u.Repo.CreateCountry(ctx, tx, createdCountry)
 	if err != nil {
-		u.Log.Warn(ctx, "invalid request body to create country", "error", err, "func_name", funcName)
+		u.Log.Warn(ctx, "invalid request body to create country", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
