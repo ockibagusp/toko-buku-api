@@ -16,7 +16,7 @@ type Repository struct {
 }
 
 const (
-	countryBaseError     = "country  %d: %v"
+	countryBaseError     = "country %d: %v"
 	countryNotFoundError = "country %d: not found"
 )
 
@@ -38,7 +38,7 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Countries, 
 
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
-		r.Log.Debug(ctx, "get query context with error", "error", err, "func_name", funcName)
+		r.Log.Error(ctx, "get query context with error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 	defer rows.Close()
@@ -46,7 +46,7 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Countries, 
 	for rows.Next() {
 		country, err := scanIntoGetCountries(rows)
 		if err != nil {
-			r.Log.Debug(ctx, "get scan into get countries with error", "error", err, "func_name", funcName)
+			r.Log.Error(ctx, "get scan into get countries with error", "error", err, "func_name", funcName)
 			return nil, err
 		}
 
@@ -55,13 +55,13 @@ func (r Repository) GetCountries(ctx context.Context, tx *sql.Tx) ([]Countries, 
 
 	rerr := rows.Close()
 	if rerr != nil {
-		r.Log.Debug(ctx, "get rows close with error", "error", err, "func_name", funcName)
+		r.Log.Error(ctx, "get rows close with error", "error", err, "func_name", funcName)
 
 		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
-		r.Log.Debug(ctx, "get rows err with error", "error", err, "func_name", funcName)
+		r.Log.Error(ctx, "get rows err with error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
@@ -97,10 +97,10 @@ func (r Repository) GetCountryByID(ctx context.Context, tx *sql.Tx, countryID ui
 	country, err = scanRowIntoGetCountryByID(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			r.Log.Debug(ctx, "get scan row into get coutry by id with errors.Is", "error", err, "func_name", funcName)
+			r.Log.Error(ctx, "get scan row into get coutry by id with errors.Is", "error", err, "func_name", funcName)
 			return nil, fmt.Errorf(countryNotFoundError, country.ID)
 		}
-		r.Log.Debug(ctx, "get scan row into get coutry by id with error", "error", err, "func_name", funcName)
+		r.Log.Error(ctx, "get scan row into get coutry by id with error", "error", err, "func_name", funcName)
 		return nil, fmt.Errorf(countryBaseError, country.ID, err)
 	}
 
@@ -135,13 +135,13 @@ func (r Repository) CreateCountry(ctx context.Context, tx *sql.Tx, country *Coun
 	query := "INSERT INTO countries(id, updated_at, iso3, country, nice_country, currency) VALUES (?, ?, ?, ?, ?, ?)"
 	result, err := tx.ExecContext(ctx, query, country.ID, country.Updated_At, country.Iso3, country.Country, country.Nice_Country, country.Currency)
 	if err != nil {
-		r.Log.Debug(ctx, "get exec context with create country error", "error", err, "func_name", funcName)
+		r.Log.Error(ctx, "get exec context with create country error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
 	countryID, err := result.LastInsertId()
 	if err != nil {
-		r.Log.Debug(ctx, "get result last insert id with create country error:", "error", err, "func_name", funcName)
+		r.Log.Error(ctx, "get result last insert id with create country error:", "error", err, "func_name", funcName)
 		return nil, err
 	}
 	country.ID = uint8(countryID)
@@ -153,7 +153,7 @@ func (r Repository) UpdateCountry(ctx context.Context, tx *sql.Tx, country *Coun
 	query := "UPDATE countries SET iso3 = ?, country = ?, nice_country = ?, currency = ? WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, country.Iso3, country.Country, country.Currency, country.ID)
 	if err != nil {
-		r.Log.Debug(ctx, "get exec context with update country error", "error", err, "func_name", "repository.UpdateCountry")
+		r.Log.Error(ctx, "get exec context with update country error", "error", err, "func_name", "repository.UpdateCountry")
 		return nil, err
 	}
 
@@ -164,7 +164,7 @@ func (r Repository) DeleteCountry(ctx context.Context, tx *sql.Tx, country *Coun
 	query := "DELETE FROM countries WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, country.ID)
 	if err != nil {
-		r.Log.Debug(ctx, "get exec context with delete country error", "error", err, "func_name", "repository.DeleteCountry")
+		r.Log.Error(ctx, "get exec context with delete country error", "error", err, "func_name", "repository.DeleteCountry")
 		return err
 	}
 

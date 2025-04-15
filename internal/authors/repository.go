@@ -17,7 +17,7 @@ type Repository struct {
 }
 
 const (
-	authorBaseError     = "author  %d: %v"
+	authorBaseError     = "author %d: %v"
 	authorNotFoundError = "author %d: not found"
 )
 
@@ -39,8 +39,7 @@ func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, err
 
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
-		r.Log.Debug(ctx, "func_name", funcName, "get query context with error", err)
-
+		r.Log.Error(ctx, "get query context with error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 	defer rows.Close()
@@ -48,7 +47,7 @@ func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, err
 	for rows.Next() {
 		author, err := scanIntoGetAuthors(rows)
 		if err != nil {
-			r.Log.Debug(ctx, "func_name", funcName, "get scan into get author with error", err)
+			r.Log.Error(ctx, "get scan into get author with error", "error", err, "func_name", funcName)
 			return nil, err
 		}
 
@@ -56,12 +55,12 @@ func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, err
 	}
 
 	if err := rows.Close(); err != nil {
-		r.Log.Debug(ctx, "func_name", funcName, "get rows close with error", err)
+		r.Log.Error(ctx, "get rows close with error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
-		r.Log.Debug(ctx, "func_name", funcName, "get rows err with error", err)
+		r.Log.Error(ctx, "get rows err with error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
@@ -105,10 +104,10 @@ func (r Repository) GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint
 	author, err := scanRowIntoGetAuthorById(row, authorId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			r.Log.Debug(ctx, "func_name", funcName, "get scan row into get author by id with errors.Is", err)
+			r.Log.Error(ctx, "get scan row into get author by id with errors.Is", "error", err, "func_name", funcName)
 			return nil, fmt.Errorf(authorNotFoundError, author.ID)
 		}
-		r.Log.Debug(ctx, "func_name", funcName, "get scan row into get author by id with error", err)
+		r.Log.Error(ctx, "get scan row into get author by id with error", "error", err, "func_name", funcName)
 		return nil, fmt.Errorf(authorBaseError, author.ID, err)
 	}
 
@@ -150,13 +149,13 @@ func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Author
 	query := "INSERT INTO authors(country_id, authors, city) VALUES (?, ?, ?)"
 	result, err := tx.ExecContext(ctx, query, author.Country_Id, author.Author, author.City)
 	if err != nil {
-		r.Log.Debug(ctx, "func_name", funcName, "get exec context with create author error", err)
+		r.Log.Error(ctx, "get exec context with create author error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
 	authorId, err := result.LastInsertId()
 	if err != nil {
-		r.Log.Debug(ctx, "func_name", funcName, "get result last insert id with create author error", err)
+		r.Log.Error(ctx, "get result last insert id with create author error", "error", err, "func_name", funcName)
 		return nil, err
 	}
 	author.ID = uint16(authorId)
@@ -167,7 +166,7 @@ func (r Repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Author
 	query := "UPDATE authors SET author = ?, city = ? WHERE author_id = ?"
 	_, err := tx.ExecContext(ctx, query, author.Author, author.City, author.ID)
 	if err != nil {
-		r.Log.Debug(ctx, "func_name", "repository.UpdateAuthor", "get exec context with update author error", err)
+		r.Log.Error(ctx, "get exec context with update author error", "error", err, "func_name", "repository.UpdateAuthor")
 		return nil, err
 	}
 
@@ -178,7 +177,7 @@ func (r Repository) DeleteAuthor(ctx context.Context, tx *sql.Tx, author *Author
 	query := "DELETE FROM authors WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, author.ID)
 	if err != nil {
-		r.Log.Debug(ctx, "func_name", "repository.DeleteAuthor", "get exec context with delete author error", err)
+		r.Log.Error(ctx, "get exec context with delete author error", "error", err, "func_name", "repository.DeleteAuthor")
 		return err
 	}
 
