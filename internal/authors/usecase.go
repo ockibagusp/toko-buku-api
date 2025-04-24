@@ -99,6 +99,7 @@ func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest
 	err := u.Validate.Struct(request)
 	if err != nil {
 		u.Log.Warn(ctx, "invalid request body to update author", "error", err, "func_name", funcName)
+		return nil, err
 	}
 
 	tx, err := u.Repo.DB.Begin()
@@ -108,22 +109,31 @@ func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest
 	}
 	defer utils.CommitOrRollback(tx)
 
-	updateAuthor, err := u.Repo.GetAuthorById(ctx, tx, uint16(request.ID))
+	oldAuthor, err := u.Repo.GetAuthorById(ctx, tx, uint16(request.ID))
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to update author: repo GetAuthorById", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
-	updateAuthor.Author = request.Author
+	if request.Author != "" {
+		oldAuthor.Author = request.Author
+	}
 
-	// ??
-	updateAuthor, err = u.Repo.UpdateAuthor(ctx, tx, updateAuthor)
+	if request.City != "" {
+		oldAuthor.City = request.City
+	}
+
+	if request.Country_Id > 0 {
+		oldAuthor.Country_Id = request.Country_Id
+	}
+
+	updatedAuthor, err := u.Repo.UpdateAuthor(ctx, tx, oldAuthor)
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to update author", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
-	return updateAuthor, nil
+	return updatedAuthor, nil
 }
 
 func (u *Usecase) DeleteAuthor(ctx context.Context, authorId uint16) error {

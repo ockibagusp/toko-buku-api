@@ -141,12 +141,10 @@ func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Authors, error) {
 	return &author, nil
 }
 
-///////
-
 func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (auther *Authors, err error) {
 	funcName := "repository.CreateAuthor"
 
-	query := "INSERT INTO authors(country_id, authors, city) VALUES (?, ?, ?)"
+	query := "INSERT INTO authors(country_id, author, city) VALUES (?, ?, ?)"
 	result, err := tx.ExecContext(ctx, query, author.Country_Id, author.Author, author.City)
 	if err != nil {
 		r.Log.Error(ctx, "get exec context with create author error", "error", err, "func_name", funcName)
@@ -163,7 +161,7 @@ func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Author
 }
 
 func (r Repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (*Authors, error) {
-	query := "UPDATE authors SET author = ?, city = ? WHERE author_id = ?"
+	query := "UPDATE authors SET author = ?, city = ? WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, author.Author, author.City, author.ID)
 	if err != nil {
 		r.Log.Error(ctx, "get exec context with update author error", "error", err, "func_name", "repository.UpdateAuthor")

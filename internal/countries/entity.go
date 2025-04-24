@@ -19,9 +19,9 @@ type CreateCountryRequest struct {
 }
 
 type UpdateCountryRequest struct {
-	ID           uint8  `validate:"required" json:"id"`
-	Iso3         string `validate:"required" json:"iso3"`
-	Country      string `validate:"required,min=3,max=50" json:"country"`
-	Nice_Country string `validate:"required,min=3,max=50" json:"nice_country"`
-	Currency     string `validate:"required,min=3,max=50" json:"currency"`
+	ID           uint8  `json:"id"`           // `validate:"required"`
+	Iso3         string `json:"iso3"`         // `validate:"required,min=3,max=3"`
+	Country      string `json:"country"`      // `validate:"required,min=3,max=50"`
+	Nice_Country string `json:"nice_country"` // `validate:"required,min=3,max=50"`
+	Currency     string `json:"currency"`     // `validate:"required,min=3,max=50"`
 }

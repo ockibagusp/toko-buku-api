@@ -98,6 +98,7 @@ func (u *Usecase) UpdateCountry(ctx context.Context, request *UpdateCountryReque
 	err := u.Validate.Struct(request)
 	if err != nil {
 		u.Log.Warn(ctx, "invalid request body to update country", "error", err, "func_name", funcName)
+		return nil, err
 	}
 
 	tx, err := u.Repo.DB.Begin()
@@ -107,15 +108,28 @@ func (u *Usecase) UpdateCountry(ctx context.Context, request *UpdateCountryReque
 	}
 	defer utils.CommitOrRollback(tx)
 
-	updatedCountry, err := u.Repo.GetCountryByID(ctx, tx, uint16(request.ID))
+	oldCountry, err := u.Repo.GetCountryByID(ctx, tx, uint16(request.ID))
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to update country", "error", err, "func_name", funcName)
 		return nil, err
 	}
 
-	updatedCountry.Country = request.Country
+	if request.Country != "" {
+		oldCountry.Country = request.Country
+	}
 
-	updatedCountry, err = u.Repo.UpdateCountry(ctx, tx, updatedCountry)
+	if request.Currency != "" {
+		oldCountry.Currency = request.Currency
+	}
+	if request.Iso3 != "" {
+		oldCountry.Iso3 = request.Iso3
+	}
+
+	if request.Nice_Country != "" {
+		oldCountry.Nice_Country = request.Nice_Country
+	}
+
+	updatedCountry, err := u.Repo.UpdateCountry(ctx, tx, oldCountry)
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to update country: repo UpdateCountry", "error", err, "func_name", funcName)
 		return nil, err

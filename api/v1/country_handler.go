@@ -50,7 +50,7 @@ func (h CountryHandler) GetCountryById(writer http.ResponseWriter, request *http
 	ctx := request.Context()
 	funcName := "handler.GetCountryById"
 
-	countryById := request.URL.Query().Get("countryById")
+	countryById := request.PathValue("countryById")
 	h.Log.Info(ctx, fmt.Sprintf("receive request to get country by id: %+v", countryById), "func_name", funcName)
 
 	id, err := strconv.Atoi(countryById)
@@ -109,7 +109,7 @@ func (h CountryHandler) UpdateCountry(writer http.ResponseWriter, request *http.
 	ctx := request.Context()
 	funcName := "handler.UpdateCountry"
 
-	countryById := request.URL.Query().Get("countryById")
+	countryById := request.PathValue("countryById")
 	h.Log.Info(ctx, fmt.Sprintf("receive request to update country by id: %+v", countryById), "func_name", funcName)
 
 	id, err := strconv.Atoi(countryById)
@@ -149,7 +149,7 @@ func (h CountryHandler) DeleteAuthor(writer http.ResponseWriter, request *http.R
 	ctx := request.Context()
 	funcName := "handler.DeleteCountry"
 
-	countryById := request.URL.Query().Get("countryById")
+	countryById := request.PathValue("countryById")
 	h.Log.Info(ctx, fmt.Sprintf("receive request to delete country by id: %+v", countryById), "func_name", funcName)
 
 	id, err := strconv.Atoi(countryById)

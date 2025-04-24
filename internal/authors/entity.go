@@ -27,8 +27,8 @@ type CreateAuthorRequest struct {
 }
 
 type UpdateAuthorRequest struct {
-	ID         uint16 `validate:"required" json:"id"`
-	Country_Id uint8  `validate:"required" json:"country_id"`
-	Author     string `validate:"required,min=3,max=50" json:"author"`
-	City       string `validate:"required,min=3,max=50" json:"city"`
+	ID         uint16 `json:"id"`         // `validate:"required"`
+	Country_Id uint8  `json:"country_id"` // `validate:"required"`
+	Author     string `json:"author"`     // `validate:"required,min=3,max=50"`
+	City       string `json:"city"`       // `validate:"required,min=3,max=50"`
 }

@@ -120,7 +120,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	ctx := request.Context()
 	funcName := "handler.UpdateAuthor"
 
-	authorById := request.URL.Query().Get("authorById")
+	authorById := request.PathValue("authorById")
 	h.Log.Debug(ctx, fmt.Sprintf("receive request to update author: %+v", authorById), "func_name", funcName)
 
 	id, err := strconv.Atoi(authorById)
@@ -161,7 +161,7 @@ func (h AuthorHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Re
 	ctx := request.Context()
 	funcName := "handler.DeleteAuthor"
 	h.Log.Debug(ctx, "receive request to delete author", "func_name", funcName)
-	authorById := request.URL.Query().Get("authorById")
+	authorById := request.PathValue("authorById")
 	id, err := strconv.Atoi(authorById)
 	if err != nil {
 		h.Log.Error(ctx, fmt.Sprintf("receive get delete author by id: %+v with error", authorById), "error", err, "func_name", funcName)
