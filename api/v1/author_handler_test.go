@@ -2,6 +2,7 @@ package v1
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -94,7 +95,79 @@ func TestGetAuthorsWithMock(t *testing.T) {
 	}
 }
 
-func TestGetAuthorById(t *testing.T) {
+func TestGetAuthorByIdWithMock_fail(t *testing.T) {
+	// /authors/3
+	jsonBytes := []byte(`{"status":404,"message":"Not Found"}`)
+
+	client := &MockClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				Status:     "200 OK",
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewReader(jsonBytes)),
+			}, nil
+		},
+	}
+
+	request, _ := http.NewRequest("GET", "/authors/3", nil)
+
+	response, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("invalid response status code: got %d, want 200", response.StatusCode)
+	}
+
+	body, _ := io.ReadAll(response.Body)
+	if !bytes.Equal(body, jsonBytes) {
+		t.Fatalf("invalid response body: got %s, want %s", body, jsonBytes)
+	}
+
+	var responseBody map[string]any
+	json.Unmarshal(body, &responseBody)
+	if responseBody["status"] != float64(404) {
+		t.Fatalf("invalid response status: got %d, want 404", responseBody["status"])
+	}
+	if responseBody["message"] != "Not Found" {
+		t.Fatalf("invalid response message: got %s, want Not Found", responseBody["message"])
+	}
+
+	// /authors/nil
+	jsonBytes = []byte(`{"status":500,"message":"Internal Server Error"}`)
+
+	request, _ = http.NewRequest("GET", "/authors/nil", nil)
+	// Removed redundant assignment to response
+
+	response, err = client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("invalid response status code: got %d, want 200", response.StatusCode)
+	}
+
+	body, _ = io.ReadAll(response.Body)
+	if !bytes.Equal(body, jsonBytes) {
+		t.Fatalf("invalid response body: got %s, want %s", body, jsonBytes)
+	}
+
+	responseBody = make(map[string]any)
+	json.Unmarshal(body, &responseBody)
+	if int(responseBody["status"].(float64)) != 500 {
+		t.Fatalf("invalid response status: got %d, want 500", responseBody["status"])
+	}
+	if responseBody["message"] != "Internal Server Error" {
+		t.Fatalf("invalid response message: got %s, want Internal Server Error", responseBody["message"])
+	}
+}
+
+func TestGetAuthorByIdWithMock_success(t *testing.T) {
 	jsonBytes := []byte(`{"status":200,"message":"OK","data":{"ID":1,...}}`)
 
 	client := &MockClient{
