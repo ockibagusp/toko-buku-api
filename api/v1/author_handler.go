@@ -44,7 +44,7 @@ func (h AuthorHandler) GetAuthors(writer http.ResponseWriter, request *http.Requ
 	if err != nil {
 		h.Log.Warn(ctx, "receive get authors with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -66,7 +66,7 @@ func (h AuthorHandler) GetAuthorById(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		h.Log.Error(ctx, fmt.Sprintf("receive get author by id: %+v with error", authorById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError(err.Error())
+		responseErr := utils.StatusInternalServerError()
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
 		return
 	}
@@ -76,7 +76,7 @@ func (h AuthorHandler) GetAuthorById(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		h.Log.Warn(ctx, "failed to parse request body", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusNotFound()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -97,7 +97,7 @@ func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Error(ctx, "failed to parse create author with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -106,7 +106,7 @@ func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Warn(ctx, "invalid to parse create author with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -127,7 +127,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Warn(ctx, fmt.Sprintf("receive update author by id: %+v with error", authorById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError(err.Error())
+		responseErr := utils.StatusInternalServerError()
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
 		return
 	}
@@ -137,7 +137,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Debug(ctx, "failed to parse update author with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -147,7 +147,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Warn(ctx, "invalid to parse update author with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -166,7 +166,7 @@ func (h AuthorHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Error(ctx, fmt.Sprintf("receive get delete author by id: %+v with error", authorById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError(err.Error())
+		responseErr := utils.StatusInternalServerError()
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
 		return
 	}
@@ -175,7 +175,7 @@ func (h AuthorHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		h.Log.Warn(ctx, "failed to parse request body", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
