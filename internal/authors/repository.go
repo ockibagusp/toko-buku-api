@@ -105,10 +105,10 @@ func (r Repository) GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			r.Log.Error(ctx, "get scan row into get author by id with errors.Is", "error", err, "func_name", funcName)
-			return nil, fmt.Errorf(authorNotFoundError, author.ID)
+			return nil, errors.New("not found")
 		}
 		r.Log.Error(ctx, "get scan row into get author by id with error", "error", err, "func_name", funcName)
-		return nil, fmt.Errorf(authorBaseError, author.ID, err)
+		return nil, errors.New("not found")
 	}
 
 	return author, nil
