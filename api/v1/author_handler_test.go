@@ -93,3 +93,40 @@ func TestGetAuthorsWithMock(t *testing.T) {
 		t.Fatalf("invalid response body: got %s, want %s", body, expectedBody)
 	}
 }
+
+func TestGetAuthorById(t *testing.T) {
+	jsonBytes := []byte(`{"status":200,"message":"OK","data":{"ID":1,...}}`)
+
+	client := &MockClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				Status:     "200 OK",
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewReader(jsonBytes)),
+			}, nil
+		},
+	}
+
+	request, _ := http.NewRequest("GET", "/authors/1", nil)
+
+	response, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("invalid response status code: got %d, want 200", response.StatusCode)
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+	defer response.Body.Close()
+
+	if !bytes.Equal(body, jsonBytes) {
+		t.Fatalf("invalid response body: got %s, want %s", body, jsonBytes)
+	}
+}
