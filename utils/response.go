@@ -54,14 +54,14 @@ func StatusOK[T any](data T) BaseResponseDataModel[T] {
 }
 
 // returns http 400
-func StatusBadRequest[T string](message string) BaseResponseModel[T] {
+func StatusBadRequest[T string]() BaseResponseModel[T] {
 	return BaseResponseModel[T]{
 		Status:  http.StatusBadRequest,
-		Message: message,
+		Message: "Bad Request",
 	}
 }
 
-// retuns http 401
+// returns http 401
 func StatusUnauthorized[T string](message string) BaseResponseModel[T] {
 	return BaseResponseModel[T]{
 		Status:  http.StatusUnauthorized,
@@ -78,17 +78,17 @@ func UnhandledError[T any]() BaseResponseModel[T] {
 }
 
 // returns http 500
-func StatusInternalServerError[T string](message string) BaseResponseModel[T] {
+func StatusInternalServerError[T string]() BaseResponseModel[T] {
 	return BaseResponseModel[T]{
 		Status:  http.StatusInternalServerError,
-		Message: message,
+		Message: "Internal Server Error",
 	}
 }
 
 // returns http 404
-func StatusNotFound[T string](message string) BaseResponseModel[T] {
+func StatusNotFound[T string]() BaseResponseModel[T] {
 	return BaseResponseModel[T]{
 		Status:  http.StatusNotFound,
-		Message: message,
+		Message: "Not Found",
 	}
 }
