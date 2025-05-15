@@ -1,6 +1,8 @@
 # main
 main := cmd/main.go
 
+SLEEP_COUNT = 1 # <- 3, e.g.
+
 start/sql:
 	brew services start mysql
 
@@ -14,7 +16,7 @@ run:
 	@go run $(main)
 
 all: start/sql
-	@@sleep 1
+	@@sleep $(SLEEP_COUNT)
 	@echo "------"
 # 1. golang run next (or), (.. || ...)
 # 2. print "------"
@@ -22,6 +24,13 @@ all: start/sql
 	@@go run $(main) \
 		|| echo "------" \
 		&& brew services stop mysql
+
+air:
+	@make start/sql 
+	@@sleep $(SLEEP_COUNT)
+	@air \
+		|| @echo "------" \
+		&& brew services stop mysql	
 
 build:
 	@go build $(main)
