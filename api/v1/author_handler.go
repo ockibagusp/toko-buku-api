@@ -12,14 +12,22 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Handler for author-related endpoints
+// AuthorHandler defines the methods for handling author-related HTTP requests
+type AuthorHandler interface {
+	GetAuthors(writer http.ResponseWriter, request *http.Request)
+	GetAuthorById(writer http.ResponseWriter, request *http.Request)
+	CreateAuthor(writer http.ResponseWriter, request *http.Request)
+	UpdateAuthor(writer http.ResponseWriter, request *http.Request)
+	DeleteAuthor(writer http.ResponseWriter, request *http.Request)
+}
 
-type AuthorHandler struct {
+// Handler for author-related endpoints
+type AuthorHandlerImpl struct {
 	Usecase authors.Usecase
 	Log     *logger.Logger
 }
 
-func NewAuthorHandler(usercase authors.Usecase, logger *logger.Logger, validate *validator.Validate) *AuthorHandler {
+func NewAuthorHandler(usercase authors.Usecase, logger *logger.Logger, validate *validator.Validate) AuthorHandler {
 	// file, err := os.OpenFile("./tmp/app-info.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	// if err != nil {
 	//     log.Fatal(err)
@@ -29,13 +37,13 @@ func NewAuthorHandler(usercase authors.Usecase, logger *logger.Logger, validate 
 
 	// var log = logger.NewWithFiles(os.Stdout, logger.LevelDebug, "AUTHOR", nil)
 
-	return &AuthorHandler{
+	return &AuthorHandlerImpl{
 		Usecase: usercase,
 		Log:     logger,
 	}
 }
 
-func (h AuthorHandler) GetAuthors(writer http.ResponseWriter, request *http.Request) {
+func (h *AuthorHandlerImpl) GetAuthors(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.GetAuthors"
 	h.Log.Info(ctx, "receive get authors request", "func_name", funcName)
@@ -55,7 +63,7 @@ func (h AuthorHandler) GetAuthors(writer http.ResponseWriter, request *http.Requ
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h AuthorHandler) GetAuthorById(writer http.ResponseWriter, request *http.Request) {
+func (h *AuthorHandlerImpl) GetAuthorById(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.GetAuthorById"
 
@@ -87,12 +95,12 @@ func (h AuthorHandler) GetAuthorById(writer http.ResponseWriter, request *http.R
 }
 
 // ///
-func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Request) {
+func (h *AuthorHandlerImpl) CreateAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.CreateAuthor"
 	h.Log.Info(ctx, "receive request to create author", "func_name", funcName)
 
-	createRequestAuthor := new(authors.CreateAuthorRequest)
+	createRequestAuthor := authors.CreateAuthorRequest{}
 	err := json.NewDecoder(request.Body).Decode(&createRequestAuthor)
 	if err != nil {
 		h.Log.Error(ctx, "failed to parse create author with error request", "error", err, "func_name", funcName)
@@ -102,7 +110,7 @@ func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	createAuthor, err := h.Usecase.CreateAuthor(ctx, createRequestAuthor)
+	createAuthor, err := h.Usecase.CreateAuthor(ctx, &createRequestAuthor)
 	if err != nil {
 		h.Log.Warn(ctx, "invalid to parse create author with error request", "error", err, "func_name", funcName)
 
@@ -116,7 +124,7 @@ func (h AuthorHandler) CreateAuthor(writer http.ResponseWriter, request *http.Re
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Request) {
+func (h *AuthorHandlerImpl) UpdateAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.UpdateAuthor"
 
@@ -132,7 +140,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	updateRequestAuthor := new(authors.UpdateAuthorRequest)
+	updateRequestAuthor := authors.UpdateAuthorRequest{}
 	err = json.NewDecoder(request.Body).Decode(&updateRequestAuthor)
 	if err != nil {
 		h.Log.Debug(ctx, "failed to parse update author with error request", "error", err, "func_name", funcName)
@@ -143,7 +151,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	}
 	updateRequestAuthor.ID = uint16(id)
 
-	authorResponse, err := h.Usecase.UpdateAuthor(ctx, updateRequestAuthor)
+	authorResponse, err := h.Usecase.UpdateAuthor(ctx, &updateRequestAuthor)
 	if err != nil {
 		h.Log.Warn(ctx, "invalid to parse update author with error request", "error", err, "func_name", funcName)
 
@@ -157,7 +165,7 @@ func (h AuthorHandler) UpdateAuthor(writer http.ResponseWriter, request *http.Re
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h AuthorHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Request) {
+func (h *AuthorHandlerImpl) DeleteAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.DeleteAuthor"
 	h.Log.Debug(ctx, "receive request to delete author", "func_name", funcName)
