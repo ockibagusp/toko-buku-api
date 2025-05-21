@@ -9,25 +9,32 @@ import (
 )
 
 // Core business logic for author operations
+type Usecase interface {
+	GetAuthors(ctx context.Context) (*[]Authors, error)
+	GetAuthorById(ctx context.Context, authorId uint16) (*Authors, error)
+	CreateAuthor(ctx context.Context, request *CreateAuthorRequest) (*Authors, error)
+	UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest) (*Authors, error)
+	DeleteAuthor(ctx context.Context, authorId uint16) error
+}
 
-type Usecase struct {
+type usecace struct {
 	Repo     Repository
 	Log      *logger.Logger
 	Validate *validator.Validate
 }
 
 func NewUsecase(repo Repository, logger *logger.Logger, validate *validator.Validate) Usecase {
-	return Usecase{
+	return &usecace{
 		Repo:     repo,
 		Log:      logger,
 		Validate: validate,
 	}
 }
 
-func (u *Usecase) GetAuthors(ctx context.Context) (*[]Authors, error) {
+func (u *usecace) GetAuthors(ctx context.Context) (*[]Authors, error) {
 	funcName := "usecase.GetAuthors"
 
-	tx, err := u.Repo.DB.Begin()
+	tx, err := u.Repo.GetDB().Begin()
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to get authors: repo db begin", "error", err, "func_name", funcName)
 		return nil, err
@@ -43,10 +50,10 @@ func (u *Usecase) GetAuthors(ctx context.Context) (*[]Authors, error) {
 	return authors, nil
 }
 
-func (u *Usecase) GetAuthorById(ctx context.Context, authorId uint16) (*Authors, error) {
+func (u *usecace) GetAuthorById(ctx context.Context, authorId uint16) (*Authors, error) {
 	funcName := "usecase.GetAuthorById"
 
-	tx, err := u.Repo.DB.Begin()
+	tx, err := u.Repo.GetDB().Begin()
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to get author by id: repo db begin", "error", err, "func_name", funcName)
 		return nil, err
@@ -62,7 +69,7 @@ func (u *Usecase) GetAuthorById(ctx context.Context, authorId uint16) (*Authors,
 	return author, nil
 }
 
-func (u *Usecase) CreateAuthor(ctx context.Context, request *CreateAuthorRequest) (*Authors, error) {
+func (u *usecace) CreateAuthor(ctx context.Context, request *CreateAuthorRequest) (*Authors, error) {
 	funcName := "usecase.CreateAuthor"
 
 	err := u.Validate.Struct(request)
@@ -71,7 +78,7 @@ func (u *Usecase) CreateAuthor(ctx context.Context, request *CreateAuthorRequest
 		return nil, err
 	}
 
-	tx, err := u.Repo.DB.Begin()
+	tx, err := u.Repo.GetDB().Begin()
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to create author: repo db begin", "error", err, "func_name", funcName)
 		return nil, err
@@ -93,7 +100,7 @@ func (u *Usecase) CreateAuthor(ctx context.Context, request *CreateAuthorRequest
 	return createdAuthor, nil
 }
 
-func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest) (*Authors, error) {
+func (u *usecace) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest) (*Authors, error) {
 	funcName := "usecase.UpdateAuthor"
 
 	err := u.Validate.Struct(request)
@@ -102,7 +109,7 @@ func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest
 		return nil, err
 	}
 
-	tx, err := u.Repo.DB.Begin()
+	tx, err := u.Repo.GetDB().Begin()
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to update: repo db begin", "error", err, "func_name", funcName)
 		return nil, err
@@ -136,10 +143,10 @@ func (u *Usecase) UpdateAuthor(ctx context.Context, request *UpdateAuthorRequest
 	return updatedAuthor, nil
 }
 
-func (u *Usecase) DeleteAuthor(ctx context.Context, authorId uint16) error {
+func (u *usecace) DeleteAuthor(ctx context.Context, authorId uint16) error {
 	funcName := "usecase.DeleteAuthor"
 
-	tx, err := u.Repo.DB.Begin()
+	tx, err := u.Repo.GetDB().Begin()
 	if err != nil {
 		u.Log.Warn(ctx, "failed request body to delete author: repo db begin", "error", err, "func_name", funcName)
 		return err

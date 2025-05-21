@@ -10,8 +10,17 @@ import (
 )
 
 // Database access methods for author data
+type Repository interface {
+	GetDB() *sql.DB
+	GetLog() *logger.Logger
+	GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, error)
+	GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint16) (*Authors, error)
+	CreateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (*Authors, error)
+	UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (*Authors, error)
+	DeleteAuthor(ctx context.Context, tx *sql.Tx, author *Authors) error
+}
 
-type Repository struct {
+type repository struct {
 	DB  *sql.DB
 	Log *logger.Logger
 }
@@ -22,7 +31,7 @@ const (
 )
 
 func NewRepository(db *sql.DB, logger *logger.Logger) Repository {
-	return Repository{
+	return repository{
 		DB:  db,
 		Log: logger,
 	}
@@ -32,7 +41,15 @@ func NewRepository(db *sql.DB, logger *logger.Logger) Repository {
 // FindAllComplete(..)
 // FindCompletePersonByID(..)
 
-func (r Repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, error) {
+func (r repository) GetDB() *sql.DB {
+	return r.DB
+}
+
+func (r repository) GetLog() *logger.Logger {
+	return r.Log
+}
+
+func (r repository) GetAuthors(ctx context.Context, tx *sql.Tx) (*[]Authors, error) {
 	var authors []Authors
 	var funcName = "repository.GetAuthors"
 	query := `SELECT a.*, c.* FROM authors a LEFT JOIN countries c ON a.country_id = c.id`
@@ -95,7 +112,7 @@ func scanIntoGetAuthors(rows *sql.Rows) (selectedAuthor Authors, err error) {
 	return
 }
 
-func (r Repository) GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint16) (*Authors, error) {
+func (r repository) GetAuthorById(ctx context.Context, tx *sql.Tx, authorId uint16) (*Authors, error) {
 	funcName := "repository.GetAuthorById"
 	query := `SELECT a.*, c.* FROM authors a LEFT JOIN countries c ON a.country_id = c.id WHERE a.id = ?`
 
@@ -141,7 +158,7 @@ func scanRowIntoGetAuthorById(row *sql.Row, authorId uint16) (*Authors, error) {
 	return &author, nil
 }
 
-func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (auther *Authors, err error) {
+func (r repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (auther *Authors, err error) {
 	funcName := "repository.CreateAuthor"
 
 	query := "INSERT INTO authors(country_id, author, city) VALUES (?, ?, ?)"
@@ -160,7 +177,7 @@ func (r Repository) CreateAuthor(ctx context.Context, tx *sql.Tx, author *Author
 	return author, nil
 }
 
-func (r Repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (*Authors, error) {
+func (r repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Authors) (*Authors, error) {
 	query := "UPDATE authors SET author = ?, city = ? WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, author.Author, author.City, author.ID)
 	if err != nil {
@@ -171,7 +188,7 @@ func (r Repository) UpdateAuthor(ctx context.Context, tx *sql.Tx, author *Author
 	return author, nil
 }
 
-func (r Repository) DeleteAuthor(ctx context.Context, tx *sql.Tx, author *Authors) error {
+func (r repository) DeleteAuthor(ctx context.Context, tx *sql.Tx, author *Authors) error {
 	query := "DELETE FROM authors WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, author.ID)
 	if err != nil {
