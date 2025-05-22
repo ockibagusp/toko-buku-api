@@ -12,44 +12,26 @@ type AuthorUsecaseMock struct {
 }
 
 func (m *AuthorUsecaseMock) GetAuthors(ctx context.Context) (*[]authors.Authors, error) {
-	m.Called(ctx)
-	return &[]authors.Authors{
-		{
-			ID:     1,
-			Author: "test 1",
-		},
-		{
-			ID:     2,
-			Author: "test 2",
-		},
-	}, nil
+	args := m.Called(ctx)
+	return args.Get(0).(*[]authors.Authors), args.Error(1)
 }
 
 func (m *AuthorUsecaseMock) GetAuthorById(ctx context.Context, authorId uint16) (*authors.Authors, error) {
-	m.Called(ctx, authorId)
-	return &authors.Authors{
-		ID:     1,
-		Author: "test",
-	}, nil
+	args := m.Called(ctx, authorId)
+	return args.Get(0).(*authors.Authors), args.Error(1)
 }
 
 // Add stub implementations for all other methods required by authors.Usecase interface
 func (m *AuthorUsecaseMock) CreateAuthor(ctx context.Context, author *authors.CreateAuthorRequest) (*authors.Authors, error) {
-	m.Called(ctx, author)
-	return &authors.Authors{
-		ID:     1,
-		Author: "new test",
-	}, nil
+	args := m.Called(ctx, author)
+	return args.Get(0).(*authors.Authors), args.Error(1)
 }
 
-func (m *AuthorUsecaseMock) UpdateAuthor(context.Context, *authors.UpdateAuthorRequest) (*authors.Authors, error) {
-	return &authors.Authors{
-		ID:     1,
-		Author: "update test",
-	}, nil
+func (m *AuthorUsecaseMock) UpdateAuthor(ctx context.Context, author *authors.UpdateAuthorRequest) (*authors.Authors, error) {
+	args := m.Called(ctx, author)
+	return args.Get(0).(*authors.Authors), args.Error(1)
 }
 
 func (m *AuthorUsecaseMock) DeleteAuthor(ctx context.Context, authorId uint16) error {
-	m.Called(ctx, authorId)
-	return nil
+	return m.Called(ctx).Error(1)
 }

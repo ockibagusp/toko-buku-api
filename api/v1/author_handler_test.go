@@ -112,6 +112,46 @@ func TestGetAuthorsWithMock(t *testing.T) {
 	}
 }
 
+func TestGetAuthorsWithMock_empty(t *testing.T) {
+	expected := `{"status":200,"message":"OK","data":[]}`
+
+	request := httptest.NewRequest(http.MethodGet, "/authors", nil)
+	writer := httptest.NewRecorder()
+
+	authorMock := v1Mock.AuthorUsecaseMock{}
+	authorMock.On("GetAuthors", mock.Anything).Return(&[]authors.Authors{}, nil)
+
+	a := AuthorHandlerImpl{
+		Usecase: &authorMock,
+		Log:     authorLogTest,
+	}
+
+	a.GetAuthors(writer, request)
+
+	res := writer.Result()
+	defer res.Body.Close()
+
+	// assertions
+	if res.Status != "200 OK" {
+		t.Errorf("Expected status OK but got %s", res.Status)
+	}
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200 but got %d", res.StatusCode)
+	}
+	if res.Header.Get("Content-Type") != "application/json" {
+		t.Errorf("Expected content type application/json but got %s", res.Header.Get("Content-Type"))
+	}
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("Error: %v", err)
+	}
+
+	if string(data) != expected {
+		t.Errorf("Expected %v but got %v", expected, string(data))
+	}
+}
+
 // func TestGetAuthorByIdWithMock_fail(t *testing.T) {
 // 	testCases := []struct {
 // 		name            string
