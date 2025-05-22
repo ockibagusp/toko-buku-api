@@ -2,9 +2,12 @@ package v1
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	v1Mock "toko-buku-api/api/v1/mock"
@@ -65,18 +68,18 @@ func TestGetAuthors(t *testing.T) {
 
 func TestGetAuthorsWithMock(t *testing.T) {
 	testCases := []struct {
-		name         string
-		authorStruct []authors.Authors
-		expected     string
+		name          string
+		authorsStruct []authors.Authors
+		expectedJSON  string
 	}{
 		{
-			name:         "Authors empty",
-			authorStruct: []authors.Authors{},
-			expected:     `{"status":200,"message":"OK","data":[]}`,
+			name:          "Authors empty",
+			authorsStruct: []authors.Authors{},
+			expectedJSON:  `{"status":200,"message":"OK","data":[]}`,
 		},
 		{
 			name: "Authors is not empty",
-			authorStruct: []authors.Authors{
+			authorsStruct: []authors.Authors{
 				{
 					ID:     1,
 					Author: "test 1",
@@ -86,7 +89,7 @@ func TestGetAuthorsWithMock(t *testing.T) {
 					Author: "test 2",
 				},
 			},
-			expected: `{"status":200,"message":"OK","data":[{"ID":1,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 1","City":""},{"ID":2,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 2","City":""}]}`,
+			expectedJSON: `{"status":200,"message":"OK","data":[{"ID":1,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 1","City":""},{"ID":2,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 2","City":""}]}`,
 		},
 	}
 
@@ -96,139 +99,272 @@ func TestGetAuthorsWithMock(t *testing.T) {
 			writer := httptest.NewRecorder()
 
 			authorMock := v1Mock.AuthorUsecaseMock{}
-			authorMock.On("GetAuthors", mock.Anything).Return(&tc.authorStruct, nil)
+			authorMock.On("GetAuthors", mock.Anything).Return(&tc.authorsStruct, nil)
 
-			a := AuthorHandlerImpl{
+			authorHandlerImpl := AuthorHandlerImpl{
 				Usecase: &authorMock,
 				Log:     authorLogTest,
 			}
 
-			a.GetAuthors(writer, request)
+			authorHandlerImpl.GetAuthors(writer, request)
 
-			res := writer.Result()
-			defer res.Body.Close()
+			response := writer.Result()
+			defer response.Body.Close()
 
 			// assertions
-			if res.Status != "200 OK" {
-				t.Errorf("Expected status OK but got %s", res.Status)
+			if response.Status != "200 OK" {
+				t.Errorf("Expected status OK but got %s", response.Status)
 			}
-			if res.StatusCode != http.StatusOK {
-				t.Errorf("Expected status code 200 but got %d", res.StatusCode)
+			if response.StatusCode != http.StatusOK {
+				t.Errorf("Expected status code 200 but got %d", response.StatusCode)
 			}
-			if res.Header.Get("Content-Type") != "application/json" {
-				t.Errorf("Expected content type application/json but got %s", res.Header.Get("Content-Type"))
+			if response.Header.Get("Content-Type") != "application/json" {
+				t.Errorf("Expected content type application/json but got %s", response.Header.Get("Content-Type"))
 			}
 
-			data, err := io.ReadAll(res.Body)
+			data, err := io.ReadAll(response.Body)
 			if err != nil {
 				t.Errorf("Error: %v", err)
 			}
 
-			if string(data) != tc.expected {
-				t.Errorf("Expected %v but got %v", tc.expected, string(data))
+			if string(data) != tc.expectedJSON {
+				t.Errorf("Expected %v but got %v", tc.expectedJSON, string(data))
 			}
 		})
 	}
 }
 
-// func TestGetAuthorByIdWithMock_fail(t *testing.T) {
-// 	testCases := []struct {
-// 		name            string
-// 		body            string
-// 		expectedStatus  int
-// 		expectedMessage string
-// 	}{
-// 		{
-// 			name:            "Not Found",
-// 			body:            `{"status":404,"message":"Not Found"}`,
-// 			expectedStatus:  http.StatusNotFound,
-// 			expectedMessage: "Not Found",
-// 		},
-// 		{
-// 			name:            "Internal Server Error",
-// 			body:            `{"status":500,"message":"Internal Server Error"}`,
-// 			expectedStatus:  http.StatusInternalServerError,
-// 			expectedMessage: "Internal Server Error",
-// 		},
-// 	}
+func TestGetAuthorByIdMock_failure(t *testing.T) {
+	testCases := []struct {
+		name               string
+		id                 string
+		authorStruct       authors.Authors
+		authorErr          error
+		expectedStatus     string
+		expectedStatusCode int
+		expectedMessage    string
+		expectedJSON       string
+	}{
+		// failed test cases
+		{
+			name:               "Not Found by ID: 3",
+			id:                 "3",
+			authorStruct:       authors.Authors{},
+			authorErr:          errors.New("not found"),
+			expectedStatus:     "404 Not Found",
+			expectedStatusCode: http.StatusNotFound,
+			expectedMessage:    "Not Found",
+			expectedJSON:       `{"status":404,"message":"Not Found"}`,
+		},
+		{
+			name:               "Not Found by ID: -3",
+			id:                 "-3",
+			authorStruct:       authors.Authors{},
+			authorErr:          errors.New("not found"),
+			expectedStatus:     "404 Not Found",
+			expectedStatusCode: http.StatusNotFound,
+			expectedMessage:    "Not Found",
+			expectedJSON:       `{"status":404,"message":"Not Found"}`,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			jsonBytes := []byte(tc.body)
-// 			client := &MockClient{
-// 				DoFunc: func(req *http.Request) (*http.Response, error) {
-// 					return &http.Response{
-// 						Status:     "200 OK",
-// 						Header:     http.Header{"Content-Type": []string{"application/json"}},
-// 						StatusCode: http.StatusOK,
-// 						Body:       io.NopCloser(bytes.NewReader(jsonBytes)),
-// 					}, nil
-// 				},
-// 			}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/authors/3", nil)
+			request.SetPathValue("authorById", tc.id)
 
-// 			request, _ := http.NewRequest("GET", "/authors/3", nil)
-// 			response, err := client.Do(request)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
-// 			defer response.Body.Close()
-// 			if response.Header.Get("Content-Type") != "application/json" {
-// 				t.Fatalf("invalid content type: got %s, want application/json", response.Header.Get("Content-Type"))
-// 			}
-// 			if response.StatusCode != http.StatusOK {
-// 				t.Fatalf("invalid response status code: got %d, want 200", response.StatusCode)
-// 			}
+			writer := httptest.NewRecorder()
+			writer.WriteHeader(http.StatusNotFound)
 
-// 			body, _ := io.ReadAll(response.Body)
-// 			if !bytes.Equal(body, jsonBytes) {
-// 				t.Fatalf("invalid response body: got %s, want %s", body, jsonBytes)
-// 			}
+			authorMock := v1Mock.AuthorUsecaseMock{}
 
-// 			var responseBody map[string]any
-// 			json.Unmarshal(body, &responseBody)
-// 			if int(responseBody["status"].(float64)) != tc.expectedStatus {
-// 				t.Fatalf("invalid response status: got %d, want %d", responseBody["status"], tc.expectedStatus)
-// 			}
-// 			if responseBody["message"] != tc.expectedMessage {
-// 				t.Fatalf("invalid response message: got %s, want %s", responseBody["message"], tc.expectedMessage)
-// 			}
-// 		})
-// 	}
-// }
+			numString := request.PathValue("authorById")
+			numInt, err := strconv.Atoi(numString)
+			if err == nil {
+				uint16Id := uint16(numInt)
+				id := uint16(uint16Id)
+				authorMock.On("GetAuthorById", mock.Anything, id).Return(&tc.authorStruct, tc.authorErr)
+			}
 
-// func TestGetAuthorByIdWithMock_success(t *testing.T) {
-// 	jsonBytes := []byte(`{"status":200,"message":"OK","data":{"ID":1,...}}`)
+			authorHandlerImpl := AuthorHandlerImpl{
+				Usecase: &authorMock,
+				Log:     authorLogTest,
+			}
 
-// 	client := &MockClient{
-// 		DoFunc: func(req *http.Request) (*http.Response, error) {
-// 			return &http.Response{
-// 				Status:     "200 OK",
-// 				Header:     http.Header{"Content-Type": []string{"application/json"}},
-// 				StatusCode: http.StatusOK,
-// 				Body:       io.NopCloser(bytes.NewReader(jsonBytes)),
-// 			}, nil
-// 		},
-// 	}
+			authorHandlerImpl.GetAuthorById(writer, request)
 
-// 	request, _ := http.NewRequest("GET", "/authors/1", nil)
+			response := writer.Result()
+			defer response.Body.Close()
 
-// 	response, err := client.Do(request)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	defer response.Body.Close()
+			// assertions
+			if response.Status != tc.expectedStatus {
+				t.Errorf("Expected %s but got %s", tc.expectedStatus, response.Status)
+			}
+			if response.StatusCode != tc.expectedStatusCode {
+				t.Errorf("Expected status code %d but got %d", tc.expectedStatusCode, response.StatusCode)
+			}
 
-// 	if response.StatusCode != http.StatusOK {
-// 		t.Fatalf("invalid response status code: got %d, want 200", response.StatusCode)
-// 	}
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				t.Errorf("Error: %v", err)
+			}
 
-// 	body, err := io.ReadAll(response.Body)
-// 	if err != nil {
-// 		t.Fatalf("failed to read response body: %v", err)
-// 	}
-// 	defer response.Body.Close()
+			if string(body) != tc.expectedJSON {
+				t.Errorf("Expected %v but got %v", tc.expectedJSON, string(body))
+			}
 
-// 	if !bytes.Equal(body, jsonBytes) {
-// 		t.Fatalf("invalid response body: got %s, want %s", body, jsonBytes)
-// 	}
-// }
+			var responseData map[string]any
+			json.Unmarshal(body, &responseData)
+			if int(responseData["status"].(float64)) != tc.expectedStatusCode {
+				t.Fatalf("invalid response status: got %d, want %d", responseData["status"], tc.expectedStatusCode)
+			}
+			if responseData["message"] != tc.expectedMessage {
+				t.Fatalf("invalid response message: got %s, want %s", responseData["message"], tc.expectedMessage)
+			}
+		})
+	}
+}
+
+func TestGetAuthorByIdWithErrMock_failure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/authors/fail" {
+			t.Errorf("Expected to request '/authors/fail', got: %s", r.URL.Path)
+		}
+		if r.Method != http.MethodGet {
+			t.Errorf("Expected GET method, got: %s", r.Method)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"status":400,"message":"Bad Request"}`))
+	}))
+	defer server.Close()
+
+	client := server.Client()
+
+	request, _ := http.NewRequest("GET", server.URL+"/authors/fail", nil)
+	response, err := client.Do(request)
+
+	if err != nil {
+		t.Fatalf("failed to make request: %v", err)
+	}
+	defer response.Body.Close()
+
+	// assertions
+	if response.Status != "400 Bad Request" {
+		t.Errorf("Expected status OK but got %s", response.Status)
+	}
+	if response.StatusCode != http.StatusBadRequest {
+		t.Fatalf("invalid response status code: got %d, want 400", response.StatusCode)
+	}
+	if response.Header.Get("Content-Type") != "application/json" {
+		t.Fatalf("invalid content type: got %s, want application/json", response.Header.Get("Content-Type"))
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+
+	expectedBody := `{"status":400,"message":"Bad Request"}`
+	if !bytes.Equal(body, []byte(expectedBody)) {
+		t.Fatalf("invalid response body: got %s, want %s", body, expectedBody)
+	}
+
+	var responseData map[string]any
+	json.Unmarshal(body, &responseData)
+	if int(responseData["status"].(float64)) != http.StatusBadRequest {
+		t.Fatalf("invalid response status: got %d, want %d", responseData["status"], http.StatusBadRequest)
+	}
+	if responseData["message"] != "Bad Request" {
+		t.Fatalf("invalid response message: got %s, want %s", responseData["message"], "Bad Request")
+	}
+}
+
+func TestGetAuthorByIdWithMock_success(t *testing.T) {
+	testCases := []struct {
+		name               string
+		id                 string
+		authorStruct       authors.Authors
+		authorErr          error
+		expectedStatus     string
+		expectedStatusCode int
+		expectedMessage    string
+		expectedJSON       string
+	}{
+		// success test cases
+		{
+			name: "Success by ID: 1",
+			id:   "1",
+			authorStruct: authors.Authors{
+				ID:     1,
+				Author: "test author 1",
+			},
+			expectedJSON: `{"status":200,"message":"OK","data":{"ID":1,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test author 1","City":""}}`,
+		},
+		{
+			name: "Success by ID: 2",
+			id:   "2",
+			authorStruct: authors.Authors{
+				ID:     2,
+				Author: "test author 2",
+			},
+			expectedJSON: `{"status":200,"message":"OK","data":{"ID":2,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test author 2","City":""}}`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/authors/3", nil)
+			request.SetPathValue("authorById", tc.id)
+
+			writer := httptest.NewRecorder()
+			writer.WriteHeader(http.StatusOK)
+
+			authorMock := v1Mock.AuthorUsecaseMock{}
+
+			numString := request.PathValue("authorById")
+			numInt, _ := strconv.Atoi(numString)
+
+			uint16Id := uint16(numInt)
+			id := uint16(uint16Id)
+			authorMock.On("GetAuthorById", mock.Anything, id).Return(&tc.authorStruct, nil)
+
+			authorHandlerImpl := AuthorHandlerImpl{
+				Usecase: &authorMock,
+				Log:     authorLogTest,
+			}
+
+			authorHandlerImpl.GetAuthorById(writer, request)
+
+			response := writer.Result()
+			defer response.Body.Close()
+
+			// assertions
+			if response.Status != "200 OK" {
+				t.Errorf("Expected %s but got %s", tc.expectedStatus, response.Status)
+			}
+			if response.StatusCode != 200 {
+				t.Errorf("Expected status code %d but got %d", tc.expectedStatusCode, response.StatusCode)
+			}
+
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				t.Errorf("Error: %v", err)
+			}
+
+			if string(body) != tc.expectedJSON {
+				t.Errorf("Expected %v but got %v", tc.expectedJSON, string(body))
+			}
+
+			var responseData map[string]any
+			json.Unmarshal(body, &responseData)
+			if int(responseData["status"].(float64)) != 200 {
+				t.Fatalf("invalid response status: got %d, want %d", responseData["status"], 200)
+			}
+			if responseData["message"] != "OK" {
+				t.Fatalf("invalid response message: got %s, want %s", responseData["message"], "OK")
+			}
+
+		})
+	}
+}

@@ -74,8 +74,8 @@ func (h *AuthorHandlerImpl) GetAuthorById(writer http.ResponseWriter, request *h
 	if err != nil {
 		h.Log.Error(ctx, fmt.Sprintf("receive get author by id: %+v with error", authorById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError()
-		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
+		responseErr := utils.StatusBadRequest()
+		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
 
