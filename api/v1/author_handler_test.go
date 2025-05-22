@@ -64,91 +64,70 @@ func TestGetAuthors(t *testing.T) {
 }
 
 func TestGetAuthorsWithMock(t *testing.T) {
-	expected := `{"status":200,"message":"OK","data":[{"ID":1,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 1","City":""},{"ID":2,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 2","City":""}]}`
-
-	request := httptest.NewRequest(http.MethodGet, "/authors", nil)
-	writer := httptest.NewRecorder()
-
-	authorMock := v1Mock.AuthorUsecaseMock{}
-	authorMock.On("GetAuthors", mock.Anything).Return(&[]authors.Authors{
+	testCases := []struct {
+		name         string
+		authorStruct []authors.Authors
+		expected     string
+	}{
 		{
-			ID:     1,
-			Author: "test 1",
+			name:         "Authors empty",
+			authorStruct: []authors.Authors{},
+			expected:     `{"status":200,"message":"OK","data":[]}`,
 		},
 		{
-			ID:     2,
-			Author: "test 2",
+			name: "Authors is not empty",
+			authorStruct: []authors.Authors{
+				{
+					ID:     1,
+					Author: "test 1",
+				},
+				{
+					ID:     2,
+					Author: "test 2",
+				},
+			},
+			expected: `{"status":200,"message":"OK","data":[{"ID":1,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 1","City":""},{"ID":2,"Updated_At":"0001-01-01T00:00:00Z","Country_Id":0,"Author":"test 2","City":""}]}`,
 		},
-	}, nil)
-
-	a := AuthorHandlerImpl{
-		Usecase: &authorMock,
-		Log:     authorLogTest,
 	}
 
-	a.GetAuthors(writer, request)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/authors", nil)
+			writer := httptest.NewRecorder()
 
-	res := writer.Result()
-	defer res.Body.Close()
+			authorMock := v1Mock.AuthorUsecaseMock{}
+			authorMock.On("GetAuthors", mock.Anything).Return(&tc.authorStruct, nil)
 
-	// assertions
-	if res.Status != "200 OK" {
-		t.Errorf("Expected status OK but got %s", res.Status)
-	}
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("Expected status code 200 but got %d", res.StatusCode)
-	}
-	if res.Header.Get("Content-Type") != "application/json" {
-		t.Errorf("Expected content type application/json but got %s", res.Header.Get("Content-Type"))
-	}
+			a := AuthorHandlerImpl{
+				Usecase: &authorMock,
+				Log:     authorLogTest,
+			}
 
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Errorf("Error: %v", err)
-	}
+			a.GetAuthors(writer, request)
 
-	if string(data) != expected {
-		t.Errorf("Expected %v but got %v", expected, string(data))
-	}
-}
+			res := writer.Result()
+			defer res.Body.Close()
 
-func TestGetAuthorsWithMock_empty(t *testing.T) {
-	expected := `{"status":200,"message":"OK","data":[]}`
+			// assertions
+			if res.Status != "200 OK" {
+				t.Errorf("Expected status OK but got %s", res.Status)
+			}
+			if res.StatusCode != http.StatusOK {
+				t.Errorf("Expected status code 200 but got %d", res.StatusCode)
+			}
+			if res.Header.Get("Content-Type") != "application/json" {
+				t.Errorf("Expected content type application/json but got %s", res.Header.Get("Content-Type"))
+			}
 
-	request := httptest.NewRequest(http.MethodGet, "/authors", nil)
-	writer := httptest.NewRecorder()
+			data, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Errorf("Error: %v", err)
+			}
 
-	authorMock := v1Mock.AuthorUsecaseMock{}
-	authorMock.On("GetAuthors", mock.Anything).Return(&[]authors.Authors{}, nil)
-
-	a := AuthorHandlerImpl{
-		Usecase: &authorMock,
-		Log:     authorLogTest,
-	}
-
-	a.GetAuthors(writer, request)
-
-	res := writer.Result()
-	defer res.Body.Close()
-
-	// assertions
-	if res.Status != "200 OK" {
-		t.Errorf("Expected status OK but got %s", res.Status)
-	}
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("Expected status code 200 but got %d", res.StatusCode)
-	}
-	if res.Header.Get("Content-Type") != "application/json" {
-		t.Errorf("Expected content type application/json but got %s", res.Header.Get("Content-Type"))
-	}
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Errorf("Error: %v", err)
-	}
-
-	if string(data) != expected {
-		t.Errorf("Expected %v but got %v", expected, string(data))
+			if string(data) != tc.expected {
+				t.Errorf("Expected %v but got %v", tc.expected, string(data))
+			}
+		})
 	}
 }
 
