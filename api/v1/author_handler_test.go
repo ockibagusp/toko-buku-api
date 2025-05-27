@@ -190,17 +190,19 @@ func TestGetAuthorByIdWithErrMock_failure(t *testing.T) {
 	}
 }
 
+type testCasesById struct {
+	name               string
+	id                 string
+	authorStruct       authors.Authors
+	authorErr          error
+	expectedStatus     string
+	expectedStatusCode int
+	expectedMessage    string
+	expectedJSON       string
+}
+
 func TestGetAuthorByIdMock_failure(t *testing.T) {
-	testCases := []struct {
-		name               string
-		id                 string
-		authorStruct       authors.Authors
-		authorErr          error
-		expectedStatus     string
-		expectedStatusCode int
-		expectedMessage    string
-		expectedJSON       string
-	}{
+	testCases := []testCasesById{
 		// failed test cases
 		{
 			name:               "Not Found by ID: 3",
@@ -232,16 +234,7 @@ func TestGetAuthorByIdMock_failure(t *testing.T) {
 }
 
 func TestGetAuthorByIdWithMock_success(t *testing.T) {
-	testCases := []struct {
-		name               string
-		id                 string
-		authorStruct       authors.Authors
-		authorErr          error
-		expectedStatus     string
-		expectedStatusCode int
-		expectedMessage    string
-		expectedJSON       string
-	}{
+	testCases := []testCasesById{
 		// success test cases
 		{
 			name: "Success by ID: 1",
@@ -278,16 +271,7 @@ func TestGetAuthorByIdWithMock_success(t *testing.T) {
 	}
 }
 
-func getAuthorsForAssertions(t *testing.T, tc struct {
-	name               string
-	id                 string
-	authorStruct       authors.Authors
-	authorErr          error
-	expectedStatus     string
-	expectedStatusCode int
-	expectedMessage    string
-	expectedJSON       string
-}) {
+func getAuthorsForAssertions(t *testing.T, tc testCasesById) {
 	request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/authors/%s", tc.id), nil)
 	request.SetPathValue("authorById", tc.id)
 
