@@ -8,12 +8,12 @@ import (
 // Data models and structs specific to author functionality
 
 type Authors struct {
-	ID         uint16
-	Updated_At time.Time // `gorm:"updated_at"`
-	Country_Id uint8
-	Country    *countries.Countries `json:",omitempty"`
-	Author     string
-	City       string
+	ID         uint16               `json:"id"`
+	Updated_At time.Time            `json:"updated_at"`
+	Country_Id uint8                `json:"country_id"`
+	Country    *countries.Countries `json:"country,omitempty"`
+	Author     string               `json:"author"`
+	City       string               `json:"city"`
 }
 
 // func (a Author) TableName() string {
