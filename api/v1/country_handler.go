@@ -13,20 +13,27 @@ import (
 )
 
 // Handler for country-related endpoints
+type CountryHandler interface {
+	GetCountries(writer http.ResponseWriter, request *http.Request)
+	GetCountryById(writer http.ResponseWriter, request *http.Request)
+	CreateCountry(writer http.ResponseWriter, request *http.Request)
+	UpdateCountry(writer http.ResponseWriter, request *http.Request)
+	DeleteAuthor(writer http.ResponseWriter, request *http.Request)
+}
 
-type CountryHandler struct {
+type CountryHandlerImpl struct {
 	Usecase countries.Usecase
 	Log     *logger.Logger
 }
 
-func NewCountryHandler(usercase countries.Usecase, logger *logger.Logger, validate *validator.Validate) *CountryHandler {
-	return &CountryHandler{
+func NewCountryHandler(usercase countries.Usecase, logger *logger.Logger, validate *validator.Validate) CountryHandler {
+	return &CountryHandlerImpl{
 		Usecase: usercase,
 		Log:     logger,
 	}
 }
 
-func (h CountryHandler) GetCountries(writer http.ResponseWriter, request *http.Request) {
+func (h CountryHandlerImpl) GetCountries(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.GetCountries"
 	h.Log.Info(ctx, "receive get countries request", "func_name", funcName)
@@ -35,7 +42,7 @@ func (h CountryHandler) GetCountries(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		h.Log.Warn(ctx, "receive get countries with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -46,7 +53,7 @@ func (h CountryHandler) GetCountries(writer http.ResponseWriter, request *http.R
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h CountryHandler) GetCountryById(writer http.ResponseWriter, request *http.Request) {
+func (h CountryHandlerImpl) GetCountryById(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.GetCountryById"
 
@@ -57,7 +64,7 @@ func (h CountryHandler) GetCountryById(writer http.ResponseWriter, request *http
 	if err != nil {
 		h.Log.Error(ctx, fmt.Sprintf("receive get country by id: %+v with error", countryById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError(err.Error())
+		responseErr := utils.StatusInternalServerError()
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
 		return
 	}
@@ -67,7 +74,7 @@ func (h CountryHandler) GetCountryById(writer http.ResponseWriter, request *http
 	if err != nil {
 		h.Log.Warn(ctx, "failed to parse request body", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -77,7 +84,7 @@ func (h CountryHandler) GetCountryById(writer http.ResponseWriter, request *http
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h CountryHandler) CreateCountry(writer http.ResponseWriter, request *http.Request) {
+func (h CountryHandlerImpl) CreateCountry(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.CreateCountry"
 	h.Log.Info(ctx, "receive request to create country", "func_name", funcName)
@@ -87,7 +94,7 @@ func (h CountryHandler) CreateCountry(writer http.ResponseWriter, request *http.
 	if err != nil {
 		h.Log.Warn(ctx, "failed to parse create country with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -96,7 +103,7 @@ func (h CountryHandler) CreateCountry(writer http.ResponseWriter, request *http.
 	if err != nil {
 		h.Log.Warn(ctx, "invalid to parse create country with error request", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -105,7 +112,7 @@ func (h CountryHandler) CreateCountry(writer http.ResponseWriter, request *http.
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h CountryHandler) UpdateCountry(writer http.ResponseWriter, request *http.Request) {
+func (h CountryHandlerImpl) UpdateCountry(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.UpdateCountry"
 
@@ -116,7 +123,7 @@ func (h CountryHandler) UpdateCountry(writer http.ResponseWriter, request *http.
 	if err != nil {
 		h.Log.Warn(ctx, fmt.Sprintf("receive update country by id: %+v with error", countryById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError(err.Error())
+		responseErr := utils.StatusInternalServerError()
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
 		return
 	}
@@ -126,7 +133,7 @@ func (h CountryHandler) UpdateCountry(writer http.ResponseWriter, request *http.
 	if err != nil {
 		h.Log.Debug(ctx, "failed to parse update country with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -136,7 +143,7 @@ func (h CountryHandler) UpdateCountry(writer http.ResponseWriter, request *http.
 	if err != nil {
 		h.Log.Warn(ctx, "invalid to parse update country with error request", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}
@@ -145,7 +152,7 @@ func (h CountryHandler) UpdateCountry(writer http.ResponseWriter, request *http.
 	utils.RespondWithJSON(writer, http.StatusOK, response)
 }
 
-func (h CountryHandler) DeleteAuthor(writer http.ResponseWriter, request *http.Request) {
+func (h CountryHandlerImpl) DeleteAuthor(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	funcName := "handler.DeleteCountry"
 
@@ -156,7 +163,7 @@ func (h CountryHandler) DeleteAuthor(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		h.Log.Error(ctx, fmt.Sprintf("receive to delete country by id: %+v with error", countryById), "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusInternalServerError(err.Error())
+		responseErr := utils.StatusInternalServerError()
 		utils.RespondErrorWithJSON(writer, http.StatusInternalServerError, responseErr)
 		return
 	}
@@ -165,7 +172,7 @@ func (h CountryHandler) DeleteAuthor(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		h.Log.Warn(ctx, "failed to parse request body", "error", err, "func_name", funcName)
 
-		responseErr := utils.StatusBadRequest(err.Error())
+		responseErr := utils.StatusBadRequest()
 		utils.RespondErrorWithJSON(writer, http.StatusBadRequest, responseErr)
 		return
 	}

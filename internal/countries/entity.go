@@ -3,12 +3,12 @@ package countries
 import "time"
 
 type Countries struct {
-	ID           uint8
-	Updated_At   time.Time
-	Iso3         string
-	Country      string
-	Nice_Country string
-	Currency     string
+	ID           uint8     `json:"id"`
+	Updated_At   time.Time `json:"updated_at"`
+	Iso3         string    `json:"iso3"`
+	Country      string    `json:"country"`
+	Nice_Country string    `json:"nice_country"`
+	Currency     string    `json:"currency"`
 }
 
 type CreateCountryRequest struct {
